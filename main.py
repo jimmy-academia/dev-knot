@@ -1,5 +1,7 @@
 import logging
 import argparse
+from pathlib import Path
+
 
 from loader import get_task_loader
 from schemes import setup_scheme
@@ -32,7 +34,12 @@ def main():
     args = set_arguments()
     set_seeds(args.seed)
     set_verbose(args.verbose)
-    
+
+    args.record_path = Path(f'output/{args.scheme}_{args.task}_{args.div}.json')
+    if args.record_path.exists() and not args.overwrite:
+        logging.info(f'{args.record_path} exists')
+        return
+
     planner_info = f'{args.planner_llm} + ' if args.scheme == 'knot' else ''
     logging.info(f'== running exp: {args.scheme} on {args.task} with {planner_info}{args.worker_llm}')
 
