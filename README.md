@@ -11,4 +11,5 @@ python main.py
 > insert new experiment log from the top
 
 ### 2024-12-17
-init code
+- init code
+- 1. work on reproducing addition 2. work on gsm symbolic!
