@@ -21,13 +21,15 @@ def set_arguments():
 
     # Task, prompt scheme
     parser.add_argument('--scheme', type=str, default='knot')
-    parser.add_argument('--task', type=str, default='addition', choices=['addition', 'gsm_symbolic'])
-    parser.add_argument('--div', type=str, default='8')
+    parser.add_argument('--task', type=str, default='gsm_symbolic:0')
+    # addition:[8, 16, 32]; gsm_symbolic:[0,1,2]...
+    # parser.add_argument('--div', type=str, default='8')
 
     # prevent overwrite for script/tasks when not set
     parser.add_argument('--overwrite', action='store_true')
 
     args = parser.parse_args()
+    args.task, args.div = args.task.split(':')
     return args
 
 def main():
@@ -35,7 +37,7 @@ def main():
     set_seeds(args.seed)
     set_verbose(args.verbose)
 
-    args.record_path = Path(f'output/{args.scheme}_{args.task}_{args.div}.json')
+    args.record_path = Path(f'output/{args.scheme}_{args.task}.json')
     if args.record_path.exists() and not args.overwrite:
         logging.info(f'{args.record_path} exists')
         return

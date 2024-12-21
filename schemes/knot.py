@@ -7,7 +7,7 @@ from debug import *
 
 Task_Specific_Concept = {
     'addition': "Perform the arithmetic result of input. You can only operate two numbers at a time.",
-    'gsm_symbolic': None
+    'gsm_symbolic': "Solve the question."
 }
 
 Task_Specific_Example = {
@@ -15,9 +15,23 @@ Task_Specific_Example = {
 (0)=LLM("Split the sequence {(input)} into a list of numbers. Output a list")
 (1)=LLM("Add {(0)}[0] and {(0)}[1]. Only output number.")
 (2)=LLM("Add {(1)} and {(0)}[2]. Only output number.")""",
-    'gsm_symbolic': None
+    'gsm_symbolic': """example for the following question: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today? (Script do not contain this line.)
+    (0)=LLM("Extract the initial number of trees and the total number of trees after planting from {(input)}. Output a list in the format [initial_trees, total_trees].")
+    (1)=LLM("Subtract the initial number of trees {(0)}[0] from the total number of trees {(0)}[1]. Output only the value.")
+    (2)=LLM("The result from {(1)} is the number of trees planted by the grove workers. Output the value.")
+    """,
 }
 
+
+"""
+    example for the following question: Benny saw a 10-foot shark with 2 6-inch remoras attached to it. What percentage of the shark's body length is the combined length of the remoras? (Script do not contain this line.)
+(0)=LLM("Extract the length of the shark and the lengths of the remoras from {(input)}. Output a list in the format [shark_length, remora_length].")
+(1)=LLM("Convert the shark length from {(0)}[0] to inches. Output only the value.")
+(2)=LLM("Convert the remora length from {(0)}[1] to inches. Output only the value.")
+(3)=LLM("Multiply {(2)} by two to find the combined length of the remoras. Output only the value.")
+(4)=LLM("Divide {(3)} by {(1)} to calculate the fraction of the shark's length represented by the combined length of the remoras. Output only the value.")
+(5)=LLM("Multiply {(4)} by one hundred to convert the result into a percentage. Output only the value.")
+"""
 
 class KnowledgeableNetworkofThought(BaseScheme):
     

@@ -1,8 +1,9 @@
 # develop kNoT
 
 ## Usage
-- source 
+
 ```bash
+echo [your_openai_api_key] >> .openaiapi_key # it is .gitignored
 python main.py
 ```
 

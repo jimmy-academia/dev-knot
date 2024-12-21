@@ -2,6 +2,8 @@ import openai
 import logging
 from collections import defaultdict
 from utils import readf, user_struct, system_struct, dumpj
+from debug import *
+
 
 class BaseScheme(object):
     def __init__(self, args, task_loader):
@@ -15,7 +17,7 @@ class BaseScheme(object):
         self.system_servent = "You follow orders strictly. Output the answer without any additional information."
 
     def check_openai_api(self):
-        self.client = openai.OpenAI(api_key=readf('keys/openaiapi'))
+        self.client = openai.OpenAI(api_key=readf('.openaiapi_key'))
     
     def operate(self):
         results = defaultdict(list)
@@ -29,6 +31,8 @@ class BaseScheme(object):
             total += 1
             results['accuracy'] = correct/total
             dumpj(results, self.args.record_path)
+
+            check()
 
         results['info'] = f"Correct: {correct}/Total: {total}"
         dumpj(results, self.args.record_path)
