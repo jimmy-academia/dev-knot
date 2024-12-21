@@ -96,7 +96,10 @@ The Input section is the input query. The Context section is the goal we want to
             index = re.search(r'\((\d+)\)=LLM', step).group(1)
             instruction = re.search(r'LLM\("(.*?)"\)', step).group(1)
             _sub = partial(_format, cache=cache, query=query)
-            instruction = re.sub(r'\{\((\w+)\)\}(?:\[(\d+)\])?', _sub, instruction)
+            try:
+                instruction = re.sub(r'\{\((\w+)\)\}(?:\[(\d+)\])?', _sub, instruction)
+            except:
+                check()
             output = self.llm_answer(instruction)
             cache[index] =  ast.literal_eval(output)
         return output
