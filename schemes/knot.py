@@ -2,12 +2,13 @@ import re
 import ast
 from functools import partial
 
+import logging
 from .base import BaseScheme
 from debug import *
 
 Task_Specific_Concept = {
     'addition': "Perform the arithmetic result of input. You can only operate two numbers at a time.",
-    'gsm_symbolic': "Solve the question."
+    'gsm_symbolic': """Solve the question involving different unit measures. Provide the numerical value without any additional string or characters such as % in the final step.)"""
 }
 
 Task_Specific_Example = {
@@ -15,23 +16,33 @@ Task_Specific_Example = {
 (0)=LLM("Split the sequence {(input)} into a list of numbers. Output a list")
 (1)=LLM("Add {(0)}[0] and {(0)}[1]. Only output number.")
 (2)=LLM("Add {(1)} and {(0)}[2]. Only output number.")""",
-    'gsm_symbolic': """example for the following question: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today? (Script do not contain this line.)
+    'gsm_symbolic': 
+"""
+Input: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today? (Script do not contain this line.)
+Example:
     (0)=LLM("Extract the initial number of trees and the total number of trees after planting from {(input)}. Output a list in the format [initial_trees, total_trees].")
-    (1)=LLM("Subtract the initial number of trees {(0)}[0] from the total number of trees {(0)}[1]. Output only the value.")
-    (2)=LLM("The result from {(1)} is the number of trees planted by the grove workers. Output the value.")
+    (1)=LLM("Subtract the initial number of trees {(0)}[0] from the total number of trees {(0)}[1]. Output only the numerical value.")
+    (2)=LLM("The result from {(1)} is the number of trees planted by the grove workers. Output the  number.")
+
+Input: If there are 3 cars in the parking lot and 2 more cars arrive, how many
+      cars are in the parking lot?
+Example:
+    (0)=LLM("Extract the initial number of cars and the subsequent number of cars from the input query: {(input)}. Output a list in the format [initial_cars, subsequent_cars].")
+    (1)=LLM("{(0)}[0]+{(0)}[1]. Output only the numerical value.")
     """,
 }
-
 
 """
     example for the following question: Benny saw a 10-foot shark with 2 6-inch remoras attached to it. What percentage of the shark's body length is the combined length of the remoras? (Script do not contain this line.)
 (0)=LLM("Extract the length of the shark and the lengths of the remoras from {(input)}. Output a list in the format [shark_length, remora_length].")
-(1)=LLM("Convert the shark length from {(0)}[0] to inches. Output only the value.")
-(2)=LLM("Convert the remora length from {(0)}[1] to inches. Output only the value.")
-(3)=LLM("Multiply {(2)} by two to find the combined length of the remoras. Output only the value.")
-(4)=LLM("Divide {(3)} by {(1)} to calculate the fraction of the shark's length represented by the combined length of the remoras. Output only the value.")
-(5)=LLM("Multiply {(4)} by one hundred to convert the result into a percentage. Output only the value.")
+(1)=LLM("Convert the shark length from {(0)}[0] to inches. Output only the numerical value.")
+(2)=LLM("Convert the remora length from {(0)}[1] to inches. Output only the numerical value.")
+(3)=LLM("Multiply {(2)} by two to find the combined length of the remoras. Output only the numerical value.")
+(4)=LLM("Divide {(3)} by {(1)} to calculate the fraction of the shark's length represented by the combined length of the remoras. Output only the numerical value.")
+(5)=LLM("Multiply {(4)} by one hundred to convert the result into a percentage. Output only the numerical value.")
 """
+
+
 
 class KnowledgeableNetworkofThought(BaseScheme):
     
@@ -115,7 +126,12 @@ The Input section is the input query. The Context section is the goal we want to
             except:
                 check()
             output = self.llm_answer(instruction)
-            cache[index] =  ast.literal_eval(output)
+            try:
+                cache[index] = ast.literal_eval(output)
+            except:
+                cache[index] = output
+
+        logging.info(f'>>>>>>>>>>>> final result: {output} <<<<<<<<<<<<<')
         return output
     
 def _format(match, cache, query):

@@ -20,13 +20,13 @@ def set_arguments():
     parser.add_argument('--ckpt', type=str, default='ckpt')
 
     # Task, prompt scheme
-    parser.add_argument('--scheme', type=str, default='knot')
+    parser.add_argument('--scheme', type=str, default='zerocot') #knot, cot
     parser.add_argument('--task', type=str, default='gsm_symbolic:0')
     # addition:[8, 16, 32]; gsm_symbolic:[0,1,2]...
     # parser.add_argument('--div', type=str, default='8')
 
     # prevent overwrite for script/tasks when not set
-    parser.add_argument('--overwrite', action='store_true')
+    # parser.add_argument('--overwrite', action='store_true')
 
     args = parser.parse_args()
     args.task, args.div = args.task.split(':')
@@ -34,6 +34,7 @@ def set_arguments():
 
 def main():
     args = set_arguments()
+    args.overwrite=True
     set_seeds(args.seed)
     set_verbose(args.verbose)
 
