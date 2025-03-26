@@ -8,7 +8,8 @@ from debug import *
 
 Task_Specific_Concept = {
     'addition': "Perform the arithmetic result of input. You can only operate two numbers at a time.",
-    'gsm_symbolic': """Solve the question involving different unit measures. Provide the numerical value without any additional string or characters such as % in the final step.)"""
+    'gsm_symbolic': """Solve the question involving different unit measures. Provide the numerical value without any additional string or characters such as % in the final step.)""",
+    'game24': "Solve the game of 24. Search for an arithmetic combination of the given four numbers that equates to 24. Arithmetic combination comes in the form of <number><operator><number><operator><number> where <operator> is one of + - * / and <number> is single digit number. You must follow the example to enumerate 6 possible combinations for the first 2 numbers!"
 }
 
 Task_Specific_Example = {
@@ -30,6 +31,8 @@ Example:
     (0)=LLM("Extract the initial number of cars and the subsequent number of cars from the input query: {(input)}. Output a list in the format [initial_cars, subsequent_cars].")
     (1)=LLM("{(0)}[0]+{(0)}[1]. Output only the numerical value.")
     """,
+    'game24': """
+    """
 }
 
 """
@@ -80,7 +83,7 @@ Use {(input)}, {(Set1)}, ... to represent input, not allow to directly use numbe
 Use python indexing to get the element in the list (E.g. {(0)}[0], {(0)}[1]).
 Do not directly use numbers.
 
-Based on your expert knowledge %s and the above example, create a script to solve the following question:
+Based on your expert knowledge \n %s and the above example, create a script to solve the following question:
 %s
 The Input section is the input query. The Context section is the goal we want to achieve.
 """
@@ -110,9 +113,19 @@ The Input section is the input query. The Context section is the goal we want to
     def solve_query(self, query):
         goal_prompt = f'Input: {query}\nContext: {self.tsp_context}'
         knowledge = self.llm_answer(self.knowledge_prompt%goal_prompt, True)
+
+        print(self.knowledge_prompt%goal_prompt)
+        print("============")
+        print(knowledge)
+        input('knowledge!!')
+        
         script_prompt = self.script_prompt%(self.tsp_example, knowledge, goal_prompt)
         # script_prompt = self.script_prompt%(goal_prompt, knowledge, self.tsp_example)
         script = self.llm_answer(script_prompt, True)
+
+        print(script_prompt)
+        print("============")
+        print(script)
 
         cache = {}
         for step in script.split('\n'):
@@ -125,13 +138,19 @@ The Input section is the input query. The Context section is the goal we want to
                 instruction = re.sub(r'\{\((\w+)\)\}(?:\[(\d+)\])?', _sub, instruction)
             except:
                 check()
+
+            print("++++")
+            print(step)
+            print(instruction)
             output = self.llm_answer(instruction)
+            print(output)
             try:
                 cache[index] = ast.literal_eval(output)
             except:
                 cache[index] = output
 
         logging.info(f'>>>>>>>>>>>> final result: {output} <<<<<<<<<<<<<')
+        input('pause!!!')
         return output
     
 def _format(match, cache, query):

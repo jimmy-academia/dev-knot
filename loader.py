@@ -26,4 +26,9 @@ def get_task_loader(args):
                 break
         loader = zip(query_list, answer_list)
 
+    if args.task == 'game24':
+        rows = csv.reader(open(f'data/game24/24.csv'))
+        next(rows)
+        loader = ((row[1], None) for row in rows)
+
     return loader
