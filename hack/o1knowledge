@@ -12,44 +12,44 @@ Then, after the final merge leaves exactly one number, we check if it is indeed 
 
 **(0)** = FORMAT("
 \[
-  < {(input)} | {(input)} >
+  [" {(input)} | {(input)} "]
 \]
 ")
 
-> - This simply wraps the original 4 numbers into the bracketed notation, for example:  
->   `"[< 1 3 4 6 | 1 3 4 6 >]"`  
+"] - This simply wraps the original 4 numbers into the bracketed notation, for example:  
+"]   `"[[" 1 3 4 6 | 1 3 4 6 "]]"`  
 
 ---
 
 **(1)** = FOREACH{(0)} LLM("
-Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Each step, you are only allowed to choose two of the remaining numbers to obtain a new number.
+Use numbers and basic arithmetic operations + - * / and parenthesis  to obtain 24. /) to obtain 24. Each step, you are only allowed to choose two of the remaining numbers to obtain a new number.
 
 Example merges for 4 numbers:
-Input: < 1 3 4 6 | 1 3 4 6 >
+Input: [" 1 3 4 6 | 1 3 4 6 "]
 Possible next steps:  
-- < 1+3 4 6 | 4 4 6 >  
-- < 1*3 4 6 | 3 4 6 >  
-- < 4-1 3 6 | 3 3 6 >  
+- [" 1+3 4 6 | 4 4 6 "]  
+- [" 1*3 4 6 | 3 4 6 "]  
+- [" 4-1 3 6 | 3 3 6 "]  
 - … (and so on for every possible pair selection)
 
 Input: {(item)}
 Possible next steps:
 ")
 
-> - Here you prompt a language model (or your own code) to generate **all** possible ways of combining any two of the four numbers.  
-> - Each possible merge reduces the list of 4 numbers to 3 numbers plus a resulting expression.  
+"] - Here you prompt a language model (or your own code) to generate **all** possible ways of combining any two of the four numbers.  
+"] - Each possible merge reduces the list of 4 numbers to 3 numbers plus a resulting expression.  
 
 ---
 
 **(2)** = FOREACH{(1)} SPLIT(";")
 
-> - If your LLM (or other solver) outputs multiple merges separated by semicolons, this step splits them into separate items.  
+"] - If your LLM (or other solver) outputs multiple merges separated by semicolons, this step splits them into separate items.  
 
 ---
 
 **(3)** = FLATTEN{(2)}
 
-> - Gather all resulting items into one flat list (so that every possible next-step partial solution is a single entry).  
+"] - Gather all resulting items into one flat list (so that every possible next-step partial solution is a single entry).  
 
 ---
 
@@ -57,12 +57,12 @@ Possible next steps:
 Evaluate if this given state can (sure / likely / impossible) still reach 24 based on the numbers that remain.
 
 Some quick examples for reference:
-< 4+7 12 | 11 12 >
+[" 4+7 12 | 11 12 "]
 11 + 12 = 23
 11 * 12 = 132
 impossible
 
-< 6+6 3 | 12 3 >
+[" 6+6 3 | 12 3 "]
 12 + 3 = 15
 (12 - 3) = 9
 possible to combine further, so likely
@@ -70,24 +70,24 @@ possible to combine further, so likely
 {(item)}
 ")
 
-> - You ask for a quick plausibility rating:  
->   - **sure** means: “I can already see 24 is directly reachable.” (Sometimes LLM might confirm it can definitely be turned into 24 by some obvious step.)  
->   - **likely** means: “I don’t immediately see 24, but it is within a reasonable range or I see a straightforward route.”  
->   - **impossible** means: “I see no path that gets 24.”  
+"] - You ask for a quick plausibility rating:  
+"]   - **sure** means: “I can already see 24 is directly reachable.” (Sometimes LLM might confirm it can definitely be turned into 24 by some obvious step.)  
+"]   - **likely** means: “I don’t immediately see 24, but it is within a reasonable range or I see a straightforward route.”  
+"]   - **impossible** means: “I see no path that gets 24.”  
 
 ---
 
 **(5)** = FOREACH{(4)} MAP({'impossible': 0.001, 'likely': 1, 'sure': 20})
 
-> - Converts each rating from the model into a numeric score for ranking.  
-> - For instance, “impossible” → 0.001, “likely” → 1, “sure” → 20.  
+"] - Converts each rating from the model into a numeric score for ranking.  
+"] - For instance, “impossible” → 0.001, “likely” → 1, “sure” → 20.  
 
 ---
 
 **(6)** = TOP20{(3)} BY{(4)}
 
-> - Use the numeric scores from step (5) to pick the best 20 partial states from (3).  
-> - (Or fewer or more as you like; the key is to keep a manageable number of plausible merges for the next round.)  
+"] - Use the numeric scores from step (5) to pick the best 20 partial states from (3).  
+"] - (Or fewer or more as you like; the key is to keep a manageable number of plausible merges for the next round.)  
 
 ---
 
@@ -96,31 +96,31 @@ At this point, you have a set of the most promising partial states, each with ex
 ---
 
 **(7)** = FOREACH{(6)} LLM("
-Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Each step, you are only allowed to choose two of the remaining numbers to obtain a new number.
+Use numbers and basic arithmetic operations + - * / and parenthesis  to obtain 24. /) to obtain 24. Each step, you are only allowed to choose two of the remaining numbers to obtain a new number.
 
-For example, if the current state is < 1+3 4 6 | 4 4 6 >, next possible merges might be:
-- < 4+4 6 | 8 6 >
-- < 4*4 6 | 16 6 >
-- < 4-6 4 | -2 4 >
+For example, if the current state is [" 1+3 4 6 | 4 4 6 "], next possible merges might be:
+- [" 4+4 6 | 8 6 "]
+- [" 4*4 6 | 16 6 "]
+- [" 4-6 4 | -2 4 "]
 (and so on)
 
 Input: {(item)}
 Possible next steps:
 ")
 
-> - Now we take each 3‑number partial state and propose merges to go from 3 numbers down to 2 numbers.  
+"] - Now we take each 3‑number partial state and propose merges to go from 3 numbers down to 2 numbers.  
 
 ---
 
 **(8)** = FOREACH{(7)} SPLIT(";")
 
-> - Again, split any multiline or multi‑option outputs by semicolon.  
+"] - Again, split any multiline or multi‑option outputs by semicolon.  
 
 ---
 
 **(9)** = FLATTEN{(8)}
 
-> - Combine them into a single list of 2‑number partial states.  
+"] - Combine them into a single list of 2‑number partial states.  
 
 ---
 
@@ -130,19 +130,19 @@ Evaluate if this state can (sure / likely / impossible) still reach 24 by combin
 {(item)}
 ")
 
-> - Check plausibility (similar to step (4)) for each newly generated 2‑number partial state.  
+"] - Check plausibility (similar to step (4)) for each newly generated 2‑number partial state.  
 
 ---
 
 **(11)** = FOREACH{(10)} MAP({'impossible': 0.001, 'likely': 1, 'sure': 20})
 
-> - Convert the LLM rating into numeric scores for ranking.  
+"] - Convert the LLM rating into numeric scores for ranking.  
 
 ---
 
 **(12)** = TOP20{(9)} BY{(10)}
 
-> - Pick the top partial states that have 2 numbers left.  
+"] - Pick the top partial states that have 2 numbers left.  
 
 ---
 
@@ -151,28 +151,28 @@ At this point, you have partial states each with **2 numbers** left.
 ---
 
 **(13)** = FOREACH{(12)} LLM("
-Use numbers and basic arithmetic operations (+ - * /) to obtain 24. You must now combine these final 2 numbers into one. For example:
+Use numbers and basic arithmetic operations + - * / and parenthesis  to obtain 24. /) to obtain 24. You must now combine these final 2 numbers into one. For example:
 
-Input: < 3 8 | 3 8 >
-Possible next step: < 3 * 8 | 24 >
+Input: [" 3 8 | 3 8 "]
+Possible next step: [" 3 * 8 | 24 "]
 
 Input: {(item)}
 Possible next steps:
 ")
 
-> - This merges the final 2 numbers into a single numeric result.  
+"] - This merges the final 2 numbers into a single numeric result.  
 
 ---
 
 **(14)** = FOREACH{(13)} SPLIT(";")
 
-> - Split out each final merge possibility.  
+"] - Split out each final merge possibility.  
 
 ---
 
 **(15)** = FLATTEN{(14)}
 
-> - Flatten them into a single list.  Each item should look like `"< (some expression) | 24 >"`, or might not be 24 if the math fails.  
+"] - Flatten them into a single list.  Each item should look like `"[" (some expression) | 24 "]"`, or might not be 24 if the math fails.  
 
 ---
 
@@ -180,11 +180,11 @@ Possible next steps:
 verify if the input uses the 4 distinct values exactly once, and equates to 24.
 
 Example checks:
-Input: < (1+3)*6 + 4 | 24 >
+Input: [" (1+3)*6 + 4 | 24 "]
 Values: 1 3 6 4
 Judgement: The expression = 24. Each number 1,3,6,4 used once. Return it.
 
-Input: < (3+4)*3 | 21 >
+Input: [" (3+4)*3 | 21 "]
 Values: 3 4 3
 Judgement: repeated a '3' from nowhere. Not valid or doesn't equal 24.
 
@@ -193,10 +193,10 @@ Values: {(input)}
 Judgement:
 ")
 
-> - Finally, we verify:
->   1. **All four distinct original inputs** are used exactly once.  
->   2. The expression indeed evaluates to 24.  
->   3. If correct, we “Return ( ... )” as the final solution.  
+"] - Finally, we verify:
+"]   1. **All four distinct original inputs** are used exactly once.  
+"]   2. The expression indeed evaluates to 24.  
+"]   3. If correct, we “Return ( ... )” as the final solution.  
 
 ---
 

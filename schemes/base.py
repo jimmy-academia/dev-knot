@@ -37,15 +37,15 @@ class BaseScheme(object):
         model = self.args.planner_llm if planner else self.args.worker_llm
         if 'gpt' in model:
             message = [system_struct(self.system_servent), user_struct(prompt)]
-            logging.info(" <<<< input prompt")
-            logging.info(message)
+            # logging.info(" <<<< input prompt")
+            # logging.info(message)
             response = self.client.chat.completions.create(
                         model = model,
                         messages = message,
                         temperature = 0,
                     )
             response = response.choices[0].message.content
-            logging.info(" >>>> \n" + response)
+            # logging.info(" >>>> \n" + response)
         else:
             print('llama!')
 
