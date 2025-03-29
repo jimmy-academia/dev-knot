@@ -3,11 +3,15 @@ from schemes.cot import ChainofThought, ZeroCoT
 # from schemes.tot import TreeofThought
 # from schemes.got import GraphofThought
 from schemes.knot import KnowledgeableNetworkofThought
+from schemes.rknot import RKnowledgeableNetworkofThought
+
 
 
 def setup_scheme(args, task_loader):
     if args.scheme == 'knot':
         return KnowledgeableNetworkofThought(args, task_loader)
+    elif args.scheme == 'rknot':
+        return RKnowledgeableNetworkofThought(args, task_loader)
     elif args.scheme == 'cot':
         return ChainofThought(args, task_loader)
     elif args.scheme == 'zerocot':

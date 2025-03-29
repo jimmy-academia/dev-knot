@@ -1,0 +1,102 @@
+Solve the game of 24. You are given four numbers. Use numbers and basic arithmetic operations (+ - * /) to obtain 24. First, you can use the syntax representation <1+2 5 6 | 3 3 4> to represent partial solutions and the remaining numerical values. Next, you should take several steps, where in each step, you are only allowed to choose two of the remaining numbers to obtain a new number. In particular, you can conduct LLM actions to propose several next steps each syntax representation received in the current step. After each step, you should also organize them into a flat list, evaluate each result, and select the top candidates for next step. Finally, evaluate each equation and return the first one that correctly equates to 24. 
+
+        Consider the example for 3 numbers, you need to translate it to 4 numbers (Script do not contain this line.)
+    (0)=FORMAT("[< {(input)} | {(input)} >]")
+    (1)=FOREACH{(0)}LLM("Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Each step, you are only allowed to choose two of the remaining numbers to obtain a new number.
+Input: < 4 6 12 | 4 6 12 >
+Possible next step: < 6-4 12 | 2 12 >
+Input: < 9 10 24 | 9 10 24 >
+Possible next step: < 10-9 24 | 1 24 >
+Input: < 3 4 9 | 3 4 9 >
+Possible next step: < 9-3 4 | 6 4 >
+Input: < 1 2 8 | 1 2 8 >
+Possible next steps: < 1+2 8 | 3 8 >
+Input: < 5 9 10 | 5 9 10 >
+Possible next steps: < 5+10 9 | 15 9 >; < 5+9 10 | 14 10 >; < 9+10 5 | 19 5 >
+Input: < 1 4 6 | 1 4 6 >
+Possible next steps: < 1*4 6 | 4 6 >; < 1*6 4 | 6 4 >; < 4*6 1 | 24 1 >
+Input: < 4 8 12 | 4 8 12 >
+Possible next steps: < 8/4 12 | 2 12 >; < 4+8 12 | 12 12 >; < 12/4 8 | 3 8 >
+Input: {(item)}
+Possible next steps:
+") 
+    (2)=FOREACH{(1)}SPLIT(";")
+    (3)=FLATTEN{(2)}
+    (4)=FOREACH{(3)}LLM("Evaluate if given state can reach 24 (sure/likely/impossible)
+< 2*5 14 | 10 14 >
+10 + 14 = 24
+sure
+< 4+7 12 | 11 12 >
+11 + 12 = 23
+12 - 11 = 1
+11 * 12 = 132
+11 / 12 = 0.91
+impossible
+< 4 4 10 | 4 4 10 >
+4 + 4 + 10 = 8 + 10 = 18
+4 * 10 - 4 = 40 - 4 = 36
+(10 - 4) * 4 = 6 * 4 = 24
+sure
+< 4 9 11 | 4 9 11 >
+9 + 11 + 4 = 20 + 4 = 24
+sure
+< 5 7 8 | 5 7 8 >
+5 + 7 + 8 = 12 + 8 = 20
+(8 - 5) * 7 = 3 * 7 = 21
+I cannot obtain 24 now, but numbers are within a reasonable range
+likely
+< 5 6 6 | 5 6 6 >
+5 + 6 + 6 = 17
+(6 - 5) * 6 = 1 * 6 = 6
+I cannot obtain 24 now, but numbers are within a reasonable range
+likely
+< 10 10 11 | 10 10 11 >
+10 + 10 + 11 = 31
+(11 - 10) * 10 = 10
+10 10 10 are all too big
+impossible
+< 1 3 3 | 1 3 3 >
+1 * 3 * 3 = 9
+(1 + 3) * 3 = 12
+1 3 3 are all too small
+impossible
+{(item))}
+")
+    (5)=FOREACH{(4)}MAP({'impossible': 0.001, 'likely': 1, 'sure': 20})
+    (6)=TOP20{(3)}BY{(4)}
+    (7)=FOREACH{(6)}LLM("Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Each step, you are only allowed to choose two of the remaining numbers to obtain a new number.
+Input: < 6-4 12 | 2 12 >
+Possible next step: < (6-4)*12 | 24 >
+Input: < 10-9 24 | 1 24 >
+Possible next step: < (10-9)*24 | 24 >
+Input: < 9-3 4 | 6 4 >
+Possible next step: < (9-3)*4 | 24 >
+Input: < 5+10 9 | 15 9 >
+Possible next steps: < 5+10+9 | 24 >
+Input: < 12/4 8 | 3 8 >
+Possible next steps: < 12/4*8 | 24 >
+Input: {(item)}
+Possible next steps:
+") 
+    (8)=FOREACH{(7)}SPLIT(";")
+    (9)=FLATTEN{(8)}
+    (10)=FOREACH{(9)}LLM("verify if the input uses the 4 values exactly once, and equates to 24
+Input: < (1+3)*3 | 12 >
+Values: 4 3 3
+Judgement: The equation did not use 4! failed
+Input: < (10+10)*4 | 24 >
+Values: 10 10 4
+Judgement: (10+10)*4 = 20*4 = 80 does not equate to 24! failed
+Input: < (6-4)*12 | 24 >
+Values: 6 4 12
+Judgement: (6-4)*12 = 2*12 = 24. 6 4 12 each used once. Correct! Return (6-4)*12
+Input:  < (9-3)*4 | 24 >
+Values: 3 4 9
+Judgement: (9-3)*4 = 6*4 = 24. 3 4 9 each used once. Correct! Return (9-3)*4
+Input: {(item)}
+Values: {(input)}
+Judgement: 
+")
+    
+        The above example uses (n)= to denote each step, and provides an example structure that solves the game of 24 for 3 numbers. In particular, it repeats a group of steps 2 times to process 2 numbers into one value each time, which is suitable for 3 number cases. Please use your knowledge to create the corresponding step-by-step solution process for 4 numbers for the game of 24.
+        

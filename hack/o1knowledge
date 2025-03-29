@@ -1,0 +1,211 @@
+Below is an example “script” structure that adapts the 3‑number case into a 4‑number process. The key idea is that we need to combine four numbers into three, then combine those three into two, and finally combine those two into one. Each “round” of merging repeats the same logic:  
+1. Propose possible next steps that merge two of the remaining numbers.  
+2. Flatten and gather all possible merges.  
+3. Evaluate whether each partial state can still reach 24 (sure / likely / impossible).  
+4. Keep (top) partial states that are most promising.  
+
+Then, after the final merge leaves exactly one number, we check if it is indeed 24 and used all four values exactly once.  
+
+---
+
+### Step-by-step “script” for 4 numbers
+
+**(0)** = FORMAT("
+\[
+  < {(input)} | {(input)} >
+\]
+")
+
+> - This simply wraps the original 4 numbers into the bracketed notation, for example:  
+>   `"[< 1 3 4 6 | 1 3 4 6 >]"`  
+
+---
+
+**(1)** = FOREACH{(0)} LLM("
+Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Each step, you are only allowed to choose two of the remaining numbers to obtain a new number.
+
+Example merges for 4 numbers:
+Input: < 1 3 4 6 | 1 3 4 6 >
+Possible next steps:  
+- < 1+3 4 6 | 4 4 6 >  
+- < 1*3 4 6 | 3 4 6 >  
+- < 4-1 3 6 | 3 3 6 >  
+- … (and so on for every possible pair selection)
+
+Input: {(item)}
+Possible next steps:
+")
+
+> - Here you prompt a language model (or your own code) to generate **all** possible ways of combining any two of the four numbers.  
+> - Each possible merge reduces the list of 4 numbers to 3 numbers plus a resulting expression.  
+
+---
+
+**(2)** = FOREACH{(1)} SPLIT(";")
+
+> - If your LLM (or other solver) outputs multiple merges separated by semicolons, this step splits them into separate items.  
+
+---
+
+**(3)** = FLATTEN{(2)}
+
+> - Gather all resulting items into one flat list (so that every possible next-step partial solution is a single entry).  
+
+---
+
+**(4)** = FOREACH{(3)} LLM("
+Evaluate if this given state can (sure / likely / impossible) still reach 24 based on the numbers that remain.
+
+Some quick examples for reference:
+< 4+7 12 | 11 12 >
+11 + 12 = 23
+11 * 12 = 132
+impossible
+
+< 6+6 3 | 12 3 >
+12 + 3 = 15
+(12 - 3) = 9
+possible to combine further, so likely
+
+{(item)}
+")
+
+> - You ask for a quick plausibility rating:  
+>   - **sure** means: “I can already see 24 is directly reachable.” (Sometimes LLM might confirm it can definitely be turned into 24 by some obvious step.)  
+>   - **likely** means: “I don’t immediately see 24, but it is within a reasonable range or I see a straightforward route.”  
+>   - **impossible** means: “I see no path that gets 24.”  
+
+---
+
+**(5)** = FOREACH{(4)} MAP({'impossible': 0.001, 'likely': 1, 'sure': 20})
+
+> - Converts each rating from the model into a numeric score for ranking.  
+> - For instance, “impossible” → 0.001, “likely” → 1, “sure” → 20.  
+
+---
+
+**(6)** = TOP20{(3)} BY{(4)}
+
+> - Use the numeric scores from step (5) to pick the best 20 partial states from (3).  
+> - (Or fewer or more as you like; the key is to keep a manageable number of plausible merges for the next round.)  
+
+---
+
+At this point, you have a set of the most promising partial states, each with exactly **3 numbers** remaining.
+
+---
+
+**(7)** = FOREACH{(6)} LLM("
+Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Each step, you are only allowed to choose two of the remaining numbers to obtain a new number.
+
+For example, if the current state is < 1+3 4 6 | 4 4 6 >, next possible merges might be:
+- < 4+4 6 | 8 6 >
+- < 4*4 6 | 16 6 >
+- < 4-6 4 | -2 4 >
+(and so on)
+
+Input: {(item)}
+Possible next steps:
+")
+
+> - Now we take each 3‑number partial state and propose merges to go from 3 numbers down to 2 numbers.  
+
+---
+
+**(8)** = FOREACH{(7)} SPLIT(";")
+
+> - Again, split any multiline or multi‑option outputs by semicolon.  
+
+---
+
+**(9)** = FLATTEN{(8)}
+
+> - Combine them into a single list of 2‑number partial states.  
+
+---
+
+**(10)** = FOREACH{(9)} LLM("
+Evaluate if this state can (sure / likely / impossible) still reach 24 by combining the 2 numbers. Provide short reasoning.
+
+{(item)}
+")
+
+> - Check plausibility (similar to step (4)) for each newly generated 2‑number partial state.  
+
+---
+
+**(11)** = FOREACH{(10)} MAP({'impossible': 0.001, 'likely': 1, 'sure': 20})
+
+> - Convert the LLM rating into numeric scores for ranking.  
+
+---
+
+**(12)** = TOP20{(9)} BY{(10)}
+
+> - Pick the top partial states that have 2 numbers left.  
+
+---
+
+At this point, you have partial states each with **2 numbers** left.
+
+---
+
+**(13)** = FOREACH{(12)} LLM("
+Use numbers and basic arithmetic operations (+ - * /) to obtain 24. You must now combine these final 2 numbers into one. For example:
+
+Input: < 3 8 | 3 8 >
+Possible next step: < 3 * 8 | 24 >
+
+Input: {(item)}
+Possible next steps:
+")
+
+> - This merges the final 2 numbers into a single numeric result.  
+
+---
+
+**(14)** = FOREACH{(13)} SPLIT(";")
+
+> - Split out each final merge possibility.  
+
+---
+
+**(15)** = FLATTEN{(14)}
+
+> - Flatten them into a single list.  Each item should look like `"< (some expression) | 24 >"`, or might not be 24 if the math fails.  
+
+---
+
+**(16)** = FOREACH{(15)} LLM("
+verify if the input uses the 4 distinct values exactly once, and equates to 24.
+
+Example checks:
+Input: < (1+3)*6 + 4 | 24 >
+Values: 1 3 6 4
+Judgement: The expression = 24. Each number 1,3,6,4 used once. Return it.
+
+Input: < (3+4)*3 | 21 >
+Values: 3 4 3
+Judgement: repeated a '3' from nowhere. Not valid or doesn't equal 24.
+
+Input: {(item)}
+Values: {(input)}
+Judgement:
+")
+
+> - Finally, we verify:
+>   1. **All four distinct original inputs** are used exactly once.  
+>   2. The expression indeed evaluates to 24.  
+>   3. If correct, we “Return ( ... )” as the final solution.  
+
+---
+
+That is the overall process for 4 numbers. You generate and evaluate merges in three “rounds”:
+
+1. **Round 1:** 4 numbers → 3 numbers  
+2. **Round 2:** 3 numbers → 2 numbers  
+3. **Round 3:** 2 numbers → 1 number  
+
+…followed by the final verification.  
+
+You can tailor details such as how many candidates to keep each round (`TOP20`, `TOP10`, etc.) or how strictly your rating LLM rules out “impossible” merges. The structure, however, follows the same repeat‑the‑pattern approach shown in the 3‑number example—just extended one extra merge round so that four numbers ultimately reduce to one final value of 24.

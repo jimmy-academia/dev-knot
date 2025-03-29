@@ -1,0 +1,102 @@
+(0)=FORMAT("[< {(input)} | {(input)} >]")
+
+(1)=FOREACH{(0)}LLM("
+Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Each step, you are only allowed to choose two of the remaining numbers to obtain a new number.
+
+Example merges for 4 numbers:
+Input: < 1 3 4 6 | 1 3 4 6 >
+Possible next steps:
+- < 1+3 4 6 | 4 4 6 >
+- < 1*3 4 6 | 3 4 6 >
+- < 4-1 3 6 | 3 3 6 >
+- < 6/3 1 4 | 2 1 4 >
+(etc., covering all pairwise operations)
+
+Input: {(item)}
+Possible next steps:
+")
+
+(2)=FOREACH{(1)}SPLIT(";")
+
+(3)=FLATTEN{(2)}
+
+(4)=FOREACH{(3)}LLM("
+Evaluate if this given state can (sure / likely / impossible) still reach 24 based on the numbers that remain.
+
+Quick references:
+< 1+3 4 6 | 4 4 6 >
+(4 + 6 = 10, 4 * 6 = 24, etc.) might be likely
+< 4+7 12 | 11 12 >
+(11 + 12 = 23, 11 * 12 = 132) likely or impossible
+< 3+5 9 | 8 9 >
+(8 + 9 = 17, 8 * 9 = 72) might be likely
+< 5+9 10 | 14 10 >
+(14 + 10 = 24) sure
+< 10 10 11 | 10 10 11 >
+Probably impossible or unlikely to reach 24
+{(item)}
+")
+
+(5)=FOREACH{(4)}MAP({'impossible': 0.001, 'likely': 1, 'sure': 20})
+
+(6)=TOP20{(3)}BY{(4)}
+
+(7)=FOREACH{(6)}LLM("
+Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Each step, you are only allowed to choose two of the remaining three numbers to obtain a new number.
+
+Example merges for 3-number states:
+If current state is < 1+3 4 6 | 4 4 6 >:
+- < 4+4 6 | 8 6 >
+- < 4*4 6 | 16 6 >
+- < 6-4 4 | 2 4 >
+(etc.)
+
+Input: {(item)}
+Possible next steps:
+")
+
+(8)=FOREACH{(7)}SPLIT(";")
+
+(9)=FLATTEN{(8)}
+
+(10)=FOREACH{(9)}LLM("
+Evaluate if this state can (sure / likely / impossible) still reach 24 by combining the 2 numbers. Provide short reasoning.
+
+{(item)}
+")
+
+(11)=FOREACH{(10)}MAP({'impossible': 0.001, 'likely': 1, 'sure': 20})
+
+(12)=TOP20{(9)}BY{(10)}
+
+(13)=FOREACH{(12)}LLM("
+Use numbers and basic arithmetic operations (+ - * /) to obtain 24 by combining these final 2 numbers into one result.
+
+For example:
+Input: < 3 8 | 3 8 >
+Possible next step: < 3 * 8 | 24 >
+
+Input: {(item)}
+Possible next steps:
+")
+
+(14)=FOREACH{(13)}SPLIT(";")
+
+(15)=FLATTEN{(14)}
+
+(16)=FOREACH{(15)}LLM("
+verify if the input uses the 4 distinct values exactly once, and equates to 24.
+
+Example checks:
+Input: < (1+3)*4 + 6 | 24 >
+Values: 1 3 4 6
+Judgement: (1+3)*4 + 6 = 24, uses each number exactly once. Return ( (1+3)*4 + 6 ).
+
+Input: < (3+4)*3 | 21 >
+Values: 3 4 3
+Judgement: repeated a '3'. Not valid or not 24.
+
+Input: {(item)}
+Values: {(input)}
+Judgement:
+")
