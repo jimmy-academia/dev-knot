@@ -33,7 +33,7 @@ class BaseScheme(object):
         results['info'] = f"Correct: {correct}/Total: {total}"
         dumpj(results, self.args.record_path)
 
-    def llm_answer(self, prompt, planner=False):
+    def llm_answer(self, prompt, planner=False, temperature=0):
         model = self.args.planner_llm if planner else self.args.worker_llm
         if 'gpt' in model:
             message = [system_struct(self.system_servent), user_struct(prompt)]
@@ -42,7 +42,7 @@ class BaseScheme(object):
             response = self.client.chat.completions.create(
                         model = model,
                         messages = message,
-                        temperature = 0,
+                        temperature = temperature,
                     )
             response = response.choices[0].message.content
             # logging.info(" >>>> \n" + response)
