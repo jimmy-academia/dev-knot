@@ -16,22 +16,57 @@ class BaseScheme(object):
 
     def check_openai_api(self):
         self.client = openai.OpenAI(api_key=readf('.openaiapi_key'))
+
+        # Configure the httpx logger - this is what OpenAI uses internally
+        httpx_logger = logging.getLogger("httpx")
+        httpx_logger.setLevel(logging.WARNING)  # Suppress INFO logs completely
+        
+        # Or if you want to see httpx logs as DEBUG instead of INFO:
+        class InfoToDebugFilter(logging.Filter):
+            def filter(self, record):
+                if record.levelno == logging.INFO:
+                    record.levelno = logging.DEBUG
+                    record.levelname = 'DEBUG'
+                return True
+        
+        httpx_logger.addFilter(InfoToDebugFilter())
     
     def operate(self):
-        results = defaultdict(list)
-        results['accuracy'] = 0
-        correct = total = 0
-        for query, answer in self.task_loader:
-            output = self.solve_query(query)
-            results['output'].append(output)
-            results['answer'].append(answer)
-            correct += int(output == answer)
-            total += 1
-            results['accuracy'] = correct/total
+
+        if self.args.task == 'game24':
+            idx = 0
+            results = []
+            for query, answer in self.task_loader:
+                idx += 1
+                if idx > 201:
+                    break
+                output = self.solve_query(query)
+                results.append({
+                    'idx': idx,
+                    'query': query,
+                    'output': output,
+                    })
+                dumpj(results, self.args.record_path)
             dumpj(results, self.args.record_path)
 
-        results['info'] = f"Correct: {correct}/Total: {total}"
-        dumpj(results, self.args.record_path)
+        else:
+            results = defaultdict(list)
+            results['accuracy'] = 0
+            correct = total = 0
+
+            for query, answer in self.task_loader:
+                output = self.solve_query(query)
+                logging.info(f'=> output: {output} vs answer {answer} <<<')
+
+                results['query'].append(query)
+                results['output'].append(output)
+                results['answer'].append(answer)
+                correct += int(output == answer)
+                total += 1
+                results['accuracy'] = correct/total
+
+            results['info'] = f"Correct: {correct}/Total: {total}"
+            dumpj(results, self.args.record_path)
 
     def llm_answer(self, prompt, planner=False, temperature=0):
         model = self.args.planner_llm if planner else self.args.worker_llm

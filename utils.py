@@ -40,8 +40,8 @@ class NamespaceEncoder(json.JSONEncoder):
       return super().default(obj)
 
 def dumpj(dictionary, filepath):
-    with open(filepath, "w") as f:
-        obj = json.dumps(dictionary, indent=4, cls=NamespaceEncoder)
+    with open(filepath, "w", encoding="utf-8") as f:
+        obj = json.dumps(dictionary, indent=4, cls=NamespaceEncoder, ensure_ascii=False)
         obj = re.sub(r'("|\d+),\s+', r'\1, ', obj)
         obj = re.sub(r'\[\n\s*("|\d+)', r'[\1', obj)
         obj = re.sub(r'("|\d+)\n\s*\]', r'\1]', obj)
@@ -55,3 +55,34 @@ def loadj(filepath):
 def readf(path):
     with open(path, 'r') as f:
         return f.read()
+
+
+def _sub(match, query, cache):
+    var_name = match.group(1)
+    index_str = match.group(2)  # This will be None if no index is specified
+    
+    # Determine the base value based on variable name
+    if var_name == 'input':
+        # Handle the input variable specially
+        import ast
+        try:
+            base_value = ast.literal_eval(query)
+        except (SyntaxError, ValueError):
+            # If parsing fails, return the raw query
+            base_value = query
+    else:
+        # For all other variables, get from cache
+        base_value = cache.get(var_name, '')
+    
+    # Apply indexing if needed and possible
+    if index_str is not None and isinstance(base_value, (list, tuple)) and base_value:
+        index = int(index_str)
+        if 0 <= index < len(base_value):
+            return base_value[index]
+        else:
+            # Index out of range
+            return ''
+    
+    # Return the base value if no indexing or indexing not applicable
+    return base_value
+

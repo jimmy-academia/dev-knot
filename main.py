@@ -17,16 +17,16 @@ def set_arguments():
     # gpt-3.5-turbo, gpt-4o
     parser.add_argument('--seed', type=int, default=0, help='random seed')
     parser.add_argument('--verbose', type=int, default=1, help='verbose')
-    # parser.add_argument('--worker_llm', type=str, default="gpt-4o") 
-    parser.add_argument('--worker_llm', type=str, default="chatgpt-4o-latest")
-    parser.add_argument('--planner_llm', type=str, default="gpt-4o")
-    
+    parser.add_argument('--planner_llm', type=str, default="gpt-4o-2024-08-06") 
+    parser.add_argument('--worker_llm', type=str, default="gpt-3.5-turbo-0125")
+
     # logging decisions
     parser.add_argument('--ckpt', type=str, default='ckpt')
 
     # Task, prompt scheme
-    parser.add_argument('--scheme', type=str, default='rknot') #knot, cot
-    parser.add_argument('--task', type=str, default='game24')
+    parser.add_argument('--scheme', type=str, default='knot') #knot, cot
+    parser.add_argument('--task', type=str, default='yelp')
+    # yelp, keyword, sorting:[16, 32, 64], intersection:[32, 64, 128], arithmetic:[8, 16, 32], large_digit:[8, 16, 32]
     # addition:[8, 16, 32]; gsm_symbolic:[0,1,2]...
 
     args = parser.parse_args()
@@ -40,7 +40,7 @@ def main():
     set_verbose(args.verbose)
 
     Path('output').mkdir(exist_ok=True)
-    args.record_path = Path(f'output/{args.scheme}_{args.task}.json')
+    args.record_path = Path(f'output/{args.scheme}_{args.task}_{args.worker_llm}.json')
     if args.record_path.exists() and not args.overwrite:
         logging.info(f'{args.record_path} exists')
         return

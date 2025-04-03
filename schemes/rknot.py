@@ -77,8 +77,9 @@ class RKnowledgeableNetworkofThought(BaseScheme):
             except:
                 cache[index] = output
 
+        logging.info(f'>>>>>>>>>>>> query: {query} <<<<<<<<<<<<<')
         logging.info(f'>>>>>>>>>>>> final result: {output} <<<<<<<<<<<<<')
-        input('pause!!!')
+
         return output
     
 def _format(match, cache, query):
