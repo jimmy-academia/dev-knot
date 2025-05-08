@@ -196,3 +196,4 @@ def _format(match, cache, query):
         return str(cache[key])
 
 
+# o3-mini-high
