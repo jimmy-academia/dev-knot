@@ -11,8 +11,8 @@ class BaseScheme(object):
         if 'gpt' in self.args.planner_llm or 'gpt' in self.args.worker_llm:
             self.check_openai_api()
 
-        self.prep_const_prompt()
         self.system_servent = "You follow orders strictly. Output the answer without any additional information."
+        self.prep_const_prompt()
 
     def check_openai_api(self):
         self.client = openai.OpenAI(api_key=readf('.openaiapi_key'))
@@ -38,7 +38,10 @@ class BaseScheme(object):
             results = []
             for query, answer in self.task_loader:
                 idx += 1
-                if idx > 201:
+                if self.args.scheme == '5rknot':
+                    query = '1 '+query
+
+                if idx > 101:
                     break
                 output = self.solve_query(query)
                 results.append({

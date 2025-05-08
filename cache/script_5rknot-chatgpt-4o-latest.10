@@ -1,0 +1,33 @@
+(0)=LLM("You are solving for Game of 24. You need to carefully design an arithmetic expression with all the numbers given to you to form 24. You must use each number exactly once. You may use + - × and parenthesis. You need to carefully design an arithmetic expression using EACH NUMBER EXACTLY ONCE. Hint: 24 can be obtained by 1×24, 2×12, 3×8, 4×6 or 1+23, 2+22, 3+21, 4+20, 5+19, 6+18, 7+17, 8+16, 9+15, 10+14, 11+13, 12+12. Hint: 1 multiplied to anything keeps it unchanged. YOU CAN ONLY USE THE NUMBERS GIVEN TO YOU and NOTHING ELSE. Thus, you should think carefully whether the remaining numbers can form the other value needed to reach 24. Each step you can only connect 2 numbers. Given {(input)}, what is the most possible next step? Give me 10 most likely options that combine two of the numbers arithmetically using addition, subtraction, multiplication.")
+
+(1)=LLM("Given {(input)}, here are 10 options that combine two of the numbers arithmetically using addition, subtraction, or multiplication: {(0)}. Analyze each option and consider whether the remaining four values may be combined arithmetically to obtain 24.")
+
+(2)=LLM("The numbers are {(input)}. {(1)} Conduct the step and obtain the partial solution. Output the current state after taking the step as [arithmetic expression | four remaining values], such as [2×3 | 4 6 7 8]. Only output the state and nothing else.")
+
+(3)=LLM("{(2)} Output the four values on the right-hand side of the square bracket.")
+
+(4)=LLM("Given {(3)}, what is the most possible next step? Give me 10 most likely options that combine two of the numbers arithmetically using addition, subtraction, multiplication.")
+
+(5)=LLM("Given {(3)}, here are 10 options that combine two of the numbers arithmetically using addition, subtraction, or multiplication: {(4)}. Analyze each option and consider whether the remaining three values may be combined arithmetically to obtain 24. DO NOT USE ANY VALUE BESIDES THE FOUR VALUES IN {(3)}. Give me your reasoning:")
+
+(6)=LLM("The numbers are {(3)}. {(5)} Conduct the step and obtain the partial solution. Output the current state after taking the step as [arithmetic expression | three remaining values], such as [(2×3)+4 | 6 7 8]. Only output the state and nothing else.")
+
+(7)=LLM("{(6)} Output the three values on the right-hand side of the square bracket.")
+
+(8)=LLM("Given {(7)}, what is the most possible next step? Give me 10 most likely options that combine two of the numbers arithmetically using addition, subtraction, multiplication.")
+
+(9)=LLM("Given {(7)}, here are 10 options that combine two of the numbers arithmetically using addition, subtraction, or multiplication: {(8)}. Analyze each option and consider whether the remaining two values may be combined arithmetically to obtain 24. DO NOT USE ANY VALUE BESIDES THE THREE VALUES IN {(7)}. Give me your reasoning:")
+
+(10)=LLM("The numbers are {(7)}. {(9)} Conduct the step and obtain the partial solution. Output the current state after taking the step as [arithmetic expression | two remaining values], such as [(2×3)+4+5 | 6 7]. Only output the state and nothing else.")
+
+(11)=LLM("{(10)} Output the two values on the right-hand side of the square bracket.")
+
+(12)=LLM("The numbers are {(11)}. How to obtain 24 using these two values?")
+
+(13)=LLM("{(2)} Output the arithmetic expression on the left-hand side of the square bracket.")
+
+(14)=LLM("{(6)} Output the arithmetic expression on the left-hand side of the square bracket.")
+
+(15)=LLM("{(10)} Output the arithmetic expression on the left-hand side of the square bracket.")
+
+(16)=LLM("Given {(input)}, we have taken these steps: Step 1: {(13)}; Step 2: {(14)}; Step 3: {(15)}; Step 4: {(12)}. What is the correct arithmetic expression that obtains 24?")

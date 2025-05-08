@@ -24,8 +24,8 @@ def set_arguments():
     parser.add_argument('--ckpt', type=str, default='ckpt')
 
     # Task, prompt scheme
-    parser.add_argument('--scheme', type=str, default='knot') #knot, cot
-    parser.add_argument('--task', type=str, default='yelp')
+    parser.add_argument('--scheme', type=str, default='5rknot') #knot, cot
+    parser.add_argument('--task', type=str, default='game24')
     # yelp, keyword, sorting:[16, 32, 64], intersection:[32, 64, 128], arithmetic:[8, 16, 32], large_digit:[8, 16, 32]
     # addition:[8, 16, 32]; gsm_symbolic:[0,1,2]...
 
@@ -35,6 +35,12 @@ def set_arguments():
 
 def main():
     args = set_arguments()
+
+    if args.scheme == '5rknot':
+        # args.planner_llm = "chatgpt-4o-latest"
+        # args.planner_llm = "o1-mini"
+        args.worker_llm = "chatgpt-4o-latest"
+
     args.overwrite=True
     set_seeds(args.seed)
     set_verbose(args.verbose)
@@ -45,7 +51,7 @@ def main():
         logging.info(f'{args.record_path} exists')
         return
 
-    planner_info = f'{args.planner_llm} + ' if args.scheme == 'knot' else ''
+    planner_info = f'{args.planner_llm} +> ' if 'knot' in args.scheme else ''
     logging.info(f'== running exp: {args.scheme} on {args.task} with {planner_info}{args.worker_llm}')
 
     task_loader = get_task_loader(args)
