@@ -5,6 +5,7 @@ description = "Knowledgeable Network of Thought framework for reasoning with Lar
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
+    "nltk>=3.9.1",
     "openai>=1.68.2",
 ]
 

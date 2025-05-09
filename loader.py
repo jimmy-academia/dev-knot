@@ -18,7 +18,7 @@ def get_task_loader(args):
     # Handle tasks that use basic CSV loading pattern
     standard_csv_tasks = ['yelp', 'keyword', 'addition', 'arithmetic', 'sorting', 'large_digit']
     if args.task in standard_csv_tasks:
-        file = f'data/{args.task}/{args.div}.csv' if args.div else f'data/{args.task}.csv'
+        file = f'data/{args.task}/{args.div}.csv'
         rows = csv.reader(open(file))
         return ((row[1], row[2]) for row in rows) 
 
