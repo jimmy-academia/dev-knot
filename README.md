@@ -73,6 +73,9 @@ python main.py
 - `--planner_llm`: The LLM to use as planner (default: gpt-4o)
 - `--verbose`: Verbosity level (0, 1, 2)
 
+
+# Logs
+
 ## Experiment Log
 
 > insert new experiment log from the top
@@ -85,3 +88,17 @@ python main.py
 ### 2024-12-17
 - init code
 - 1. work on reproducing addition 2. work on gsm symbolic!
+
+
+
+## model snapshots
+
+gpt-4o-2024-11-20
+gpt-4o-2024-08-06 v
+gpt-4o-2024-05-13
+
+gpt-3.5-turbo-0125 v
+gpt-3.5-turbo-1106
+
+chatgpt-4o-latest
+

@@ -66,9 +66,7 @@ class BaseScheme(object):
 
     def prep_task_spcefics(self):
         if args.scheme == 'few' 
-            self.examples = Few_Shot_Example.get(self.args.task) 
-            if type(self.examples) is dict:
-                self.examples = self.examples.get(self.args.div)
+            self.examples = Few_Shot_Example.get(self.args.task).get(self.args.div)
         else: 
             self.examples = ""
 

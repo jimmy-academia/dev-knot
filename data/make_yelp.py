@@ -4,6 +4,8 @@ import random
 import os
 from collections import defaultdict
 
+yelp_file_path = "/home/jimmyyeh/Documents/CRATER/DATASET/yelp/yelp_academic_dataset_review.json"
+
 def load_yelp_reviews(file_path, max_reviews=1000):
     """
     Load a subset of reviews from the Yelp dataset
@@ -92,7 +94,7 @@ def write_to_csv(query_instances, output_file):
 def main():
     # Path to Yelp review dataset
     # This should be updated to the actual path of your Yelp dataset
-    yelp_file_path = "/home/jimmyyeh/Documents/CRATER/DATASET/yelp/yelp_academic_dataset_review.json"
+    
     
     # Create output directory if it doesn't exist
     output_dir = "yelp"
@@ -114,5 +116,94 @@ def main():
     
     print(f"Generated files saved in {output_dir} directory")
 
+import json
+import random
+
+def print_yelp_examples(yelp_file_path, division_sizes=[10, 20, 30], examples_per_division=3):
+    """
+    Create few-shot examples directly from the Yelp dataset and return as a dictionary.
+    Also prints the complete dictionary structure with full review text.
+    
+    Args:
+        yelp_file_path: Path to the Yelp JSON dataset file
+        division_sizes: List of division sizes to create examples for
+        examples_per_division: Number of examples per division size
+    
+    Returns:
+        Dictionary with division sizes as keys and lists of (reviews_list, answer) tuples as values
+    """
+    # Load positive and negative reviews
+    positive_reviews = []
+    negative_reviews = []
+    
+    try:
+        with open(yelp_file_path, 'r', encoding='utf-8') as f:
+            for i, line in enumerate(f):
+                if i >= 5000:  # Limit how much we read
+                    break
+                
+                try:
+                    review = json.loads(line)
+                    # Clean text and add to appropriate list
+                    if review.get('stars') == 5:
+                        positive_reviews.append(review.get('text', '').replace('\n', ' '))
+                    elif review.get('stars') == 1:
+                        negative_reviews.append(review.get('text', '').replace('\n', ' '))
+                except:
+                    continue
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        # Fallback to synthetic data
+        for _ in range(100):
+            positive_reviews.append("Great experience! Would highly recommend.")
+            negative_reviews.append("Terrible service. Would not go back.")
+    
+    # Create examples dictionary
+    examples_dict = {}
+    
+    for size in division_sizes:
+        examples = []
+        for _ in range(examples_per_division):
+            # Randomly decide how many positive reviews
+            num_positive = random.randint(0, size)
+            num_negative = size - num_positive
+            
+            # Adjust if we don't have enough reviews
+            num_positive = min(num_positive, len(positive_reviews))
+            num_negative = min(num_negative, len(negative_reviews))
+            
+            # Sample reviews
+            sampled_positive = random.sample(positive_reviews, num_positive)
+            sampled_negative = random.sample(negative_reviews, num_negative)
+            
+            # Combine and shuffle
+            all_reviews = sampled_positive + sampled_negative
+            random.shuffle(all_reviews)
+            
+            examples.append((all_reviews, num_positive))
+        
+        examples_dict[size] = examples
+    
+    # Print the dictionary structure with actual content
+    print("{")
+    for division_size, examples in examples_dict.items():
+        print(f"  {division_size}: [")
+        for i, (reviews, answer) in enumerate(examples):
+            print(f"    ([")
+            # Print each review with proper formatting
+            for j, review in enumerate(reviews):
+                # Limit review length for display purposes
+                short_review = review[:100] + "..." if len(review) > 100 else review
+                # Properly escape quotes
+                escaped_review = short_review.replace('"', '\\"')
+                print(f'      "{escaped_review}"{"," if j < len(reviews)-1 else ""}')
+            print(f"    ], {answer}),")
+        print("  ],")
+    print("}")
+    
+    return examples_dict
+# Example usage
+
 if __name__ == "__main__":
-    main()
+    # main()
+    examples_dict = print_yelp_examples(yelp_file_path)

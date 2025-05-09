@@ -54,10 +54,10 @@ def get_task_loader(args):
 
 if __name__ == "__main__":
     # Define the tasks to test (excluding game24 and gsm_symbolic)
-    tasks_to_test = ['yelp', 'keyword', 'arithmetic', 'sorting', 'large_digit', 'intersection']
+    tasks_to_test = ['keyword', 'arithmetic', 'sorting', 'large_digit', 'intersection']
     
     # Define the divisions to test for each task
-    divs = {'yelp': '', 'keyword': '', 'addition': '8', 'arithmetic': '8', 
+    divs = {'yelp': '', 'keyword': '1', 'addition': '8', 'arithmetic': '8', 
             'sorting': '16', 'large_digit': '8', 'intersection': '32'}
     
     # Create a simple args object
