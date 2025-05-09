@@ -18,7 +18,6 @@ You can only operate two numbers at a time. Calculate from left to right. Do mul
     'add_mul': """Perform the arithmetic result of input. 
 You can only operate two numbers at a time. Calculate from left to right. Do multiplication and division first.""",    
     'addition': "Perform the arithmetic result of input. You can only operate two numbers at a time.",
-    'gsm_symbolic': """Solve the question involving different unit measures. Provide the numerical value without any additional string or characters such as % in the final step.)""",
 }
 
 Task_Specific_Example = {
@@ -82,23 +81,9 @@ Task_Specific_Example = {
 (2*length-1)=LLM("Calculate {(2*length-2)}+{(0)}[0][0]+{(0)}[1][0]. Only output result.")
 (2*length)=LLM("Calculate {(2*length-1)} divide 10, Only output integer.")
 (2*length+1)=LLM("Convert into an integer: {(2*length)}{(2*length-1)}[-1]{(2*length-3)}[-1]{(2*length-5)}[-1]......{(25)}[-1]{(23)}[-1]{(21)}[-1]{(19)}[-1]{(17)}[-1]{(15)}[-1]{(13)}[-1]{(11)}[-1]{(9)}[-1]{(7)}[-1]{(5)}[-1]{(3)}[-1]{(1)}[-1]")""",
-    'gsm_symbolic': 
-"""
-Input: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today? (Script do not contain this line.)
-Example:
-    (0)=LLM("Extract the initial number of trees and the total number of trees after planting from {(input)}. Output a list in the format [initial_trees, total_trees].")
-    (1)=LLM("Subtract the initial number of trees {(0)}[0] from the total number of trees {(0)}[1]. Output only the numerical value.")
-    (2)=LLM("The result from {(1)} is the number of trees planted by the grove workers. Output the  number.")
-
-Input: If there are 3 cars in the parking lot and 2 more cars arrive, how many
-      cars are in the parking lot?
-Example:
-    (0)=LLM("Extract the initial number of cars and the subsequent number of cars from the input query: {(input)}. Output a list in the format [initial_cars, subsequent_cars].")
-    (1)=LLM("{(0)}[0]+{(0)}[1]. Output only the numerical value.")
-    """,
 }
 
-class KnowledgeableNetworkofThought(BaseScheme):
+class kNetworkofThought(BaseScheme):
     
     def prep_const_prompt(self):
         self.knowledge_prompt = """
@@ -112,12 +97,6 @@ Don't use loop or pattern to reduce step.
 Don't use any numbers/sentence in the input. Use first number/sentence, second number/sentence,....
 Use Step0, Step1, Step2 to represent result. The result cannot have any numbers.
 """
-
-#         = '''
-# Please use your knowledge to create a solution in a  step-by-step manner.
-# Every step need to be as easy as possible.
-# Don't use loop or pattern to reduce step.
-# Don't copy any numbers or words from the input. Refer to the positions, such as first number, second number,....'''
 
         self.script_prompt = """
 You have to follow the orders to create a script. script should not contain any numbers.
@@ -138,24 +117,13 @@ Based on your expert knowledge \n %s and the above example, create a script to s
 %s
 The Input section is the input query. The Context section is the goal we want to achieve.
 """
+        self.system_servent = "You follow orders strictly. Output the answer without any additional information."
 
-#         = '''
-# Create a script which contains several instructions to be called line-by-line by an LLM in a sequential order.
-# Each line is (index)=LLM("Your instruction")
-# Use (index) to label each instruction; index starts from 0.
-# Use {(index)} to represent the output from a previous result.
-# Use python indexing to get the element in the list (E.g. {(0)}[0], {(0)}[1]).
-# Don't copy any numbers or words from the input. Refer to the positions.
 
-# EXAMPLE:
-# %s
-
-# Based on your expert knowledge %s and the above example, create a script to solve the following question:
-# %s
-# The Input section is the input query. 
-# The Context section is the goal we want to achieve.
-# '''
-
+    def llm_answer(self, prompt, planner=False, temperature=0):
+        model = self.args.planner_llm if planner else self.args.worker_llm
+        message = [system_struct(self.system_servent), user_struct(prompt)]
+        return self.llm_call(message, model)
 
     def prep_task_spcefics(self):
         self.tsp_context = Task_Specific_Concept.get(self.args.task)
@@ -165,18 +133,8 @@ The Input section is the input query. The Context section is the goal we want to
         goal_prompt = f'Input: {query}\nContext: {self.tsp_context}'
         knowledge = self.llm_answer(self.knowledge_prompt%goal_prompt, True)
 
-        # print(self.knowledge_prompt%goal_prompt)
-        # print("============")
-        # print(knowledge)
-        # input('knowledge!!')
-        
         script_prompt = self.script_prompt%(self.tsp_example, knowledge, goal_prompt)
-        # script_prompt = self.script_prompt%(goal_prompt, knowledge, self.tsp_example)
         script = self.llm_answer(script_prompt, True)
-
-        # print(script_prompt)
-        # print("============")
-        # print(script)
 
         cache = {}
         for step in script.split('\n'):
@@ -192,17 +150,8 @@ The Input section is the input query. The Context section is the goal we want to
             except Exception as e:
                 print(f"Error during substitution: {e}")
 
-            # print("++++")
-            # print(step)
-            # print(instruction)
             output = self.llm_answer(instruction)
-            # print(output)
-            # input()
 
-            if "RETURN" in output:
-                output = output.replace("RETURN", "").strip()
-                return output
-            # input('>>> step by step pause and check')
             try:
                 cache[index] = ast.literal_eval(output)
             except:
@@ -210,14 +159,32 @@ The Input section is the input query. The Context section is the goal we want to
 
         return output
     
-def _format(match, cache, query):
-    key = match.group(1)
-    index = match.group(2)
-    if key == "input":
-        return query
-    elif index:
-        return str(cache[key][int(index)])
+def _sub(match, query, cache):
+    var_name = match.group(1)
+    index_str = match.group(2)  # This will be None if no index is specified
+    
+    # Determine the base value based on variable name
+    if var_name == 'input':
+        # Handle the input variable specially
+        import ast
+        try:
+            base_value = ast.literal_eval(query)
+        except (SyntaxError, ValueError):
+            # If parsing fails, return the raw query
+            base_value = query
     else:
-        return str(cache[key])
-
+        # For all other variables, get from cache
+        base_value = cache.get(var_name, '')
+    
+    # Apply indexing if needed and possible
+    if index_str is not None and isinstance(base_value, (list, tuple)) and base_value:
+        index = int(index_str)
+        if 0 <= index < len(base_value):
+            return base_value[index]
+        else:
+            # Index out of range
+            return ''
+    
+    # Return the base value if no indexing or indexing not applicable
+    return base_value
 

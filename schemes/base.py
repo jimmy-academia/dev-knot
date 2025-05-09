@@ -3,16 +3,37 @@ import logging
 from collections import defaultdict
 from utils import readf, user_struct, system_struct, dumpj
 
+Few_Shot_Example = {
+    'yelp': ,
+    'keyword': ,
+    'sorting': {
+        '8':
+        '16':
+        '32':
+    },
+    'intersection': {
+        '32':
+        '64':
+        '128':
+    },
+    'arithmetic': {
+        '8':
+        '16':
+        '32':
+    },
+    'large_digit': {
+        '8':
+        '16':
+        '32':
+    },
+}
+
 class BaseScheme(object):
     def __init__(self, args, task_loader):
         super(BaseScheme, self).__init__()
         self.args = args
         self.task_loader = task_loader
-        if 'gpt' in self.args.planner_llm or 'gpt' in self.args.worker_llm:
-            self.check_openai_api()
-
-        self.system_servent = "You follow orders strictly. Output the answer without any additional information."
-        self.prep_const_prompt()
+        self.check_openai_api()
 
     def check_openai_api(self):
         self.client = openai.OpenAI(api_key=readf('.openaiapi_key'))
@@ -30,61 +51,47 @@ class BaseScheme(object):
                 return True
         
         httpx_logger.addFilter(InfoToDebugFilter())
+
+    def llm_call(self, message, model=self.args.worker_llm, temperature=0):
+        response = self.client.chat.completions.create(
+                    model = model,
+                    messages = message,
+                    temperature = temperature,
+                )
+        response = response.choices[0].message.content
+        return response
+
+    def prep_const_prompt(self):
+        self.system_servent = "You follow orders strictly. Output the answer without any additional information."
+
+    def prep_task_spcefics(self):
+        if args.scheme == 'few' 
+            self.examples = Few_Shot_Example.get(self.args.task) 
+            if type(self.examples) is dict:
+                self.examples = self.examples.get(self.args.div)
+        else: 
+            self.examples = ""
+
+    def solve_query(self, query):
+        return self.llm_call([system_struct(self.system_servent), user_struct(query + " " + self.examples)])
     
     def operate(self):
 
-        if self.args.task == 'game24':
-            idx = 0
-            results = []
-            for query, answer in self.task_loader:
-                idx += 1
-                if self.args.scheme == '5rknot':
-                    query = '1 '+query
+        results = defaultdict(list)
+        results['accuracy'] = 0
+        correct = total = 0
 
-                if idx > 101:
-                    break
-                output = self.solve_query(query)
-                results.append({
-                    'idx': idx,
-                    'query': query,
-                    'output': output,
-                    })
-                dumpj(results, self.args.record_path)
-            dumpj(results, self.args.record_path)
+        for query, answer in self.task_loader:
+            output = self.solve_query(query)
+            logging.info(f'=> output: {output} vs answer {answer} <<<')
 
-        else:
-            results = defaultdict(list)
-            results['accuracy'] = 0
-            correct = total = 0
+            results['query'].append(query)
+            results['output'].append(output)
+            results['answer'].append(answer)
+            correct += int(output == answer)
+            total += 1
+            results['accuracy'] = correct/total
 
-            for query, answer in self.task_loader:
-                output = self.solve_query(query)
-                logging.info(f'=> output: {output} vs answer {answer} <<<')
+        results['info'] = f"Correct: {correct}/Total: {total}"
+        dumpj(results, self.args.record_path)
 
-                results['query'].append(query)
-                results['output'].append(output)
-                results['answer'].append(answer)
-                correct += int(output == answer)
-                total += 1
-                results['accuracy'] = correct/total
-
-            results['info'] = f"Correct: {correct}/Total: {total}"
-            dumpj(results, self.args.record_path)
-
-    def llm_answer(self, prompt, planner=False, temperature=0):
-        model = self.args.planner_llm if planner else self.args.worker_llm
-        if 'gpt' in model:
-            message = [system_struct(self.system_servent), user_struct(prompt)]
-            # logging.info(" <<<< input prompt")
-            # logging.info(message)
-            response = self.client.chat.completions.create(
-                        model = model,
-                        messages = message,
-                        temperature = temperature,
-                    )
-            response = response.choices[0].message.content
-            # logging.info(" >>>> \n" + response)
-        else:
-            print('llama!')
-
-        return response
