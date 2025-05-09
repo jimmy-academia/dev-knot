@@ -2,6 +2,7 @@ from schemes.base import BaseScheme
 from schemes.cot import ChainofThought, ZeroCoT
 # from schemes.tot import TreeofThought
 # from schemes.got import GraphofThought
+from schemes.l2m import LeasttoMost
 from schemes.knot import kNetworkofThought
 from schemes.fiverknote import rkNetworkofThought
 
@@ -9,8 +10,9 @@ from schemes.fiverknote import rkNetworkofThought
 SCHEME_DICT = {
     'knot': kNetworkofThought, 
     'rknot': rkNetworkofThought,
-    'zero': BaseScheme,
-    'few': BaseScheme,
+    'zero': ZeroFewShot,
+    'few': ZeroFewShot,
+    'l2m': LeasttoMost
     'cot': ChainofThought,
 }
 
