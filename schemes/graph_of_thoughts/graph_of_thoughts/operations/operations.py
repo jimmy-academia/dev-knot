@@ -424,6 +424,9 @@ class Generate(Operation):
         """
         return self.thoughts
 
+    # In schemes/graph_of_thoughts/graph_of_thoughts/operations/operations.py
+    # Find the _execute method in the Generate class and modify it:
+
     def _execute(
         self, lm: AbstractLanguageModel, prompter: Prompter, parser: Parser, **kwargs
     ) -> None:

@@ -158,19 +158,19 @@ Previous count: {previous_count}
 
     # Prompt for GoT approach to split reviews into smaller chunks
     got_split_prompt = """<Instruction> Split the following list of Yelp reviews into 2 groups of approximately equal size. These reviews vary in length and complexity - some may be short while others contain multiple paragraphs of detailed experiences. Split them into two balanced groups without changing any of the content. Output only the final groups in the following format without any additional text or thoughts:
-{
+{{
     "Group 1": [review1, review2, ...],
     "Group 2": [review3, review4, ...]
-} </Instruction>
+}} </Instruction>
 
 <Example>
 Input:
 ["My mouth has never watered so much, while waiting for our order. We had the brisket sandwich (which is at least a pound of meat), pulled pork, fish and chips, potato salad and smoke clam chowder. The potato salad is a warm salad with fried potatoes, large chunks of bacon, green peppers, onions and mayo. There is a nice bright and country decorated dining area, but we took our food home with us.", "Wonderful destination for real deal BBQ! Brisket done right! Brisket and Beans and Truffle Fries fantastic can't miss sides! Milkshakes!!!!!", "We no longer have to drive all the way to Deptford for good BBQ, Mullica Hill has needed a place like this for a long, long time! \n\nThey had some wait time issues when they first opened but have gotten things running smoothly since then. Every time I go there is better than the last. The sandwiches are oversize and you'll probably take half of it home for later.\n\nIt's clean, friendly and most of all, the food is great. \n\nP.S. do yourself a favor and park in the lower lot.", "Just an FYI to anyone concerned about getting sick- neither of the people cooking in the back had masks on. I arrived on time to pickup my food and had to stand and wait for 20 min because it wasn't ready and in addition to them I saw at least 2 other people without masks and those who were wearing them -were wearing them improperly."]
 Output: 
-{
+{{
     "Group 1": ["My mouth has never watered so much, while waiting for our order. We had the brisket sandwich (which is at least a pound of meat), pulled pork, fish and chips, potato salad and smoke clam chowder. The potato salad is a warm salad with fried potatoes, large chunks of bacon, green peppers, onions and mayo. There is a nice bright and country decorated dining area, but we took our food home with us.", "Wonderful destination for real deal BBQ! Brisket done right! Brisket and Beans and Truffle Fries fantastic can't miss sides! Milkshakes!!!!!"],
     "Group 2": ["We no longer have to drive all the way to Deptford for good BBQ, Mullica Hill has needed a place like this for a long, long time! \n\nThey had some wait time issues when they first opened but have gotten things running smoothly since then. Every time I go there is better than the last. The sandwiches are oversize and you'll probably take half of it home for later.\n\nIt's clean, friendly and most of all, the food is great. \n\nP.S. do yourself a favor and park in the lower lot.", "Just an FYI to anyone concerned about getting sick- neither of the people cooking in the back had masks on. I arrived on time to pickup my food and had to stand and wait for 20 min because it wasn't ready and in addition to them I saw at least 2 other people without masks and those who were wearing them -were wearing them improperly."]
-}
+}}
 </Example>
 
 Input:

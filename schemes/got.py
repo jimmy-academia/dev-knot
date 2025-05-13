@@ -68,11 +68,14 @@ class GraphofThought(BaseScheme):
             if final_thoughts and final_thoughts[0]:
                 output = final_thoughts[0][0].state.get("current", "")
                 logging.info(f">>>>>>> final result: {output} <<<<<<")
+                input('pause')
                 return output
             else:
                 logging.error("No final thoughts generated")
+                input('pause')
                 return "Failed to solve"
             
         except Exception as e:
             logging.error(f"Exception in GoT solver: {e}")
+            input('pause')
             return f"Error: {str(e)}"
