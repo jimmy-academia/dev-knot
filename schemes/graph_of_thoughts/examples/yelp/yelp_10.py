@@ -8,7 +8,7 @@ import csv
 import ast
 from typing import Dict, List, Callable, Union
 from functools import partial
-from graph_of_thoughts import controller, language_models, operations, prompter, parser
+from ...graph_of_thoughts import controller, language_models, operations, prompter, parser
 
 def score_review_classification(state: Dict) -> float:
     """

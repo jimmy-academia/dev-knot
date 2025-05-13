@@ -16,6 +16,10 @@ from openai.types.chat.chat_completion import ChatCompletion
 
 from .abstract_language_model import AbstractLanguageModel
 
+def readf(path):
+    with open(path, 'r') as f:
+        return f.read()
+
 
 class ChatGPT(AbstractLanguageModel):
     """
@@ -54,7 +58,8 @@ class ChatGPT(AbstractLanguageModel):
         self.organization: str = self.config["organization"]
         if self.organization == "":
             self.logger.warning("OPENAI_ORGANIZATION is not set")
-        self.api_key: str = os.getenv("OPENAI_API_KEY", self.config["api_key"])
+        self.api_key: str = readf('.openaiapi_key')
+        # self.api_key: str = os.getenv("OPENAI_API_KEY", self.config["api_key"])
         if self.api_key == "":
             raise ValueError("OPENAI_API_KEY is not set")
         # Initialize the OpenAI Client

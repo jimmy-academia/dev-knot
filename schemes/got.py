@@ -17,8 +17,11 @@ class GraphofThought(BaseScheme):
 
     def prep_task_spcefics(self):
         module_name = f'.graph_of_thoughts.examples.{self.args.task}.{self.args.task}_{self.args.div}'
+        # from debug import check
+        # check()
+        module = importlib.import_module(module_name, package='schemes')
+        
         try:
-            module = importlib.import_module(module_name, package='schemes')
             self.prompter = module.Prompter()
             self.parser = module.Parser()
             self.operations_graph = module.got()
@@ -30,15 +33,13 @@ class GraphofThought(BaseScheme):
         Solve the query using the Graph of Thoughts approach.
         """
         # Get config path
-        config_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "graph_of_thoughts/language_models/config.json",
-        )
+        config_path = "schemes/graph_of_thoughts/graph_of_thoughts/language_models/config_template.json"
         
+        modelname = 'chatgpt'
         # Initialize language model
         lm = ChatGPT(
             config_path,
-            model_name=self.args.worker_llm,
+            model_name= modelname,
             cache=True,
         )
         
