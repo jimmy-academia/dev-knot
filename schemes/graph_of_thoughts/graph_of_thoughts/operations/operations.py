@@ -13,10 +13,14 @@ from typing import List, Iterator, Dict, Callable, Union
 from abc import ABC, abstractmethod
 import itertools
 
-from graph_of_thoughts.operations.thought import Thought
-from graph_of_thoughts.language_models import AbstractLanguageModel
-from graph_of_thoughts.prompter import Prompter
-from graph_of_thoughts.parser import Parser
+# from graph_of_thoughts.operations.thought import Thought
+# from graph_of_thoughts.language_models import AbstractLanguageModel
+# from graph_of_thoughts.prompter import Prompter
+# from graph_of_thoughts.parser import Parser
+from ..operations.thought import Thought
+from ..language_models import AbstractLanguageModel
+from ..prompter import Prompter
+from ..parser import Parser
 
 
 class OperationType(Enum):

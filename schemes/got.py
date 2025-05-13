@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .base import BaseScheme
 from .graph_of_thoughts.graph_of_thoughts.controller import controller
-from .graph_of_thoughts.language_models import ChatGPT
+from .graph_of_thoughts.graph_of_thoughts.language_models import ChatGPT
 
 class GraphofThought(BaseScheme):
     """
@@ -16,7 +16,7 @@ class GraphofThought(BaseScheme):
         pass
 
     def prep_task_spcefics(self):
-        module_name = f'.graph_of_thoughts.examples.{self.args.task}.{self.args.div}'
+        module_name = f'.graph_of_thoughts.examples.{self.args.task}.{self.args.task}_{self.args.div}'
         try:
             module = importlib.import_module(module_name, package='schemes')
             self.prompter = module.Prompter()

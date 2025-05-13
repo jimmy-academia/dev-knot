@@ -5,7 +5,6 @@ from functools import partial
 import logging
 from .base import BaseScheme
 from debug import *
-from utils import _sub
 
 Task_Specific_Concept = {
     'yelp': "Output how many positive reviews in the input. Check every review one by one in the input.",

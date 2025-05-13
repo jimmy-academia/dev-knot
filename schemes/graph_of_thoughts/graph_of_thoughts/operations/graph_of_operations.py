@@ -9,8 +9,8 @@
 from __future__ import annotations
 from typing import List
 
-from graph_of_thoughts.operations.operations import Operation
-
+# from graph_of_thoughts.operations.operations import Operation
+from .operations import Operation
 
 class GraphOfOperations:
     """

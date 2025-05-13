@@ -1,4 +1,4 @@
-from schemes.base import BaseScheme
+from schemes.base import ZeroFewShot
 from schemes.l2m import Least2Most
 from schemes.sp import SuccessivePrompting
 from schemes.sd import Selfdiscover
@@ -13,7 +13,7 @@ from schemes.top import TreeOfProblems
 from schemes.got import GraphofThought
 
 from schemes.knot import kNetworkofThought
-from schemes.fiverknote import rkNetworkofThought
+from schemes.rknot import rkNetworkofThought
 
 
 SCHEME_DICT = {
