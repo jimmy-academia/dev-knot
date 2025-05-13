@@ -18,7 +18,8 @@ def set_arguments():
     parser.add_argument('--seed', type=int, default=0, help='random seed')
     parser.add_argument('--verbose', type=int, default=1, help='verbose')
     parser.add_argument('--planner_llm', type=str, default="gpt-4o-2024-08-06") 
-    parser.add_argument('--worker_llm', type=str, default="gpt-3.5-turbo-0125")
+    parser.add_argument('--worker_llm', type=str, default="gpt-4o-mini")
+    # parser.add_argument('--worker_llm', type=str, default="gpt-3.5-turbo-0125")
 
     # logging decisions
     parser.add_argument('--ckpt', type=str, default='ckpt')

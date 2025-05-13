@@ -29,7 +29,7 @@ SCHEME_DICT = {
     'aot': AlgorithmofThought,
     # 'tot': TreeofThought, 
     'top': TreeOfProblems,
-    'got': GraphofThought,
+    # 'got': GraphofThought, ## run in Graph-of-thought
     'knot': kNetworkofThought, 
     'rknot': rkNetworkofThought,
 }
