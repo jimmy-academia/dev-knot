@@ -47,7 +47,7 @@ reasoning_modules = [
 
 
 
-class SelfDiscover(BaseScheme):    
+class Selfdiscover(BaseScheme):    
     def prep_const_prompt(self):
         if self.args.task == 'large_digit':
             prompt = 'We are solving an addition problem of large-digit numbers: '

@@ -27,7 +27,9 @@ class BaseScheme(object):
         
         httpx_logger.addFilter(InfoToDebugFilter())
 
-    def llm_call(self, message, model=self.args.worker_llm, temperature=0):
+    def llm_call(self, message, model=None, temperature=0):
+        if model is None:
+            model = self.args.worker_llm
         response = self.client.chat.completions.create(
                     model = model,
                     messages = message,
@@ -61,7 +63,7 @@ class ZeroFewShot(BaseScheme):
     def prep_const_prompt(self):
         self.system_servent = "You follow orders strictly. Output the answer without any additional information."
     def prep_task_spcefics(self):
-        if args.scheme == 'few' 
+        if args.scheme == 'few':
             self.examples = Few_Shot_Example.get(self.args.task).get(self.args.div)
         else: 
             self.examples = ""

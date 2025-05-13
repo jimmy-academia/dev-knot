@@ -24,8 +24,8 @@ def set_arguments():
     parser.add_argument('--ckpt', type=str, default='ckpt')
 
     # Task, prompt scheme
-    parser.add_argument('--scheme', type=str, default='5rknot') #knot, cot
-    parser.add_argument('--task', type=str, default='game24')
+    parser.add_argument('--scheme', type=str, default='got') #knot, cot
+    parser.add_argument('--task', type=str, default='yelp:10')
     # yelp, keyword, sorting:[16, 32, 64], intersection:[32, 64, 128], arithmetic:[8, 16, 32], large_digit:[8, 16, 32]
     # addition:[8, 16, 32]; gsm_symbolic:[0,1,2]...
 

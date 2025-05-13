@@ -3,12 +3,12 @@ from schemes.l2m import Least2Most
 from schemes.sp import SuccessivePrompting
 from schemes.sd import Selfdiscover
 
-from schemes.cot import ChainofThought, ZeroCoT
 from schemes.ps import PlanAndSolve
-from schemes.cotsc import SelfconsistentCoT
+# from schemes.cot import ChainofThought, ZeroCoT
+# from schemes.cotsc import SelfconsistentCoT
 
 from schemes.aot import AlgorithmofThought
-from schemes.tot import TreeofThought
+# from schemes.tot import TreeofThought
 from schemes.top import TreeOfProblems
 from schemes.got import GraphofThought
 
@@ -22,12 +22,12 @@ SCHEME_DICT = {
     'l2m': Least2Most,
     'sp': SuccessivePrompting,
     'sd': Selfdiscover,
-    'zerocot': ZeroCoT, #
+    # 'zerocot': ZeroCoT, #
     'ps': PlanAndSolve,
-    'cot': ChainofThought, #
-    'cotsc': SelfconsistentCoT, #
+    # 'cot': ChainofThought, #
+    # 'cotsc': SelfconsistentCoT, #
     'aot': AlgorithmofThought,
-    'tot': TreeofThought, 
+    # 'tot': TreeofThought, 
     'top': TreeOfProblems,
     'got': GraphofThought,
     'knot': kNetworkofThought, 

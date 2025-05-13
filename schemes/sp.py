@@ -471,7 +471,7 @@ def get_review_chunks(reviews):
              ]
     return chunks
 
-class Successive(BaseScheme):    
+class SuccessivePrompting(BaseScheme):    
     def prep_const_prompt(self):
         if self.args.task == 'large_digit' or self.args.task == 'all_arith':
             successive_prompt = 'To compute %s, the next question to answer is:'

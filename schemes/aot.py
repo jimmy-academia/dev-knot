@@ -1,4 +1,4 @@
-from schemes.openai import OpenAI
+from openai import OpenAI
 import os
 import json
 import logging

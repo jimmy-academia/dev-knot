@@ -4,7 +4,7 @@ import importlib
 from pathlib import Path
 
 from .base import BaseScheme
-from .graph_of_thoughts import controller
+from .graph_of_thoughts.graph_of_thoughts.controller import controller
 from .graph_of_thoughts.language_models import ChatGPT
 
 class GraphofThought(BaseScheme):
