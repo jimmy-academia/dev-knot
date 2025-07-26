@@ -4,8 +4,7 @@ from schemes.sp import SuccessivePrompting
 from schemes.sd import Selfdiscover
 
 from schemes.ps import PlanAndSolve
-# from schemes.cot import ChainofThought, ZeroCoT
-# from schemes.cotsc import SelfconsistentCoT
+from schemes.cot import ChainofThought, ZeroCoT, SelfConsistentCoT
 
 from schemes.aot import AlgorithmofThought
 # from schemes.tot import TreeofThought
@@ -22,14 +21,14 @@ SCHEME_DICT = {
     'l2m': Least2Most,
     'sp': SuccessivePrompting,
     'sd': Selfdiscover,
-    # 'zerocot': ZeroCoT, #
+    'zerocot': ZeroCoT,
     'ps': PlanAndSolve,
-    # 'cot': ChainofThought, #
-    # 'cotsc': SelfconsistentCoT, #
+    'cot': ChainofThought, 
+    'cotsc': SelfConsistentCoT,
     'aot': AlgorithmofThought,
     # 'tot': TreeofThought, 
     'top': TreeOfProblems,
-    # 'got': GraphofThought, ## run in Graph-of-thought
+    'got': GraphofThought, ## run in Graph-of-thought for yelp
     'knot': kNetworkofThought, 
     'rknot': rkNetworkofThought,
 }

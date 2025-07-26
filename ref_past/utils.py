@@ -1,7 +1,12 @@
 import os
 import time
 import tiktoken
-os.environ["OPENAI_API_KEY"] = 
+
+def readf(path):
+    with open(path, 'r') as f:
+        return f.read()
+        
+os.environ["OPENAI_API_KEY"] = readf('../.openaiapi_key')
 from openai import OpenAI
 client = OpenAI()
 
@@ -32,7 +37,7 @@ def gpt_answer(prompt, model="gpt-3.5-turbo"):
             )
         except:
             time.sleep(3)
-    time.sleep(1)
+    # time.sleep(1)
 
     # calculate token
     all_tok = calculate_token(prompt)
@@ -40,13 +45,13 @@ def gpt_answer(prompt, model="gpt-3.5-turbo"):
     #     print((all_tok/1000000)*0.5)
     # else:
     #     print((all_tok/1000000)*5)
-    print(all_tok)
+    # print(all_tok)
     all_tok = calculate_token(str(response))
     # if model == "gpt-3.5-turbo":
     #     print((all_tok/1000000)*1.5)
     # else:
     #     print((all_tok/1000000)*15)
-    print(all_tok)
+    # print(all_tok)
 
 
     return response.choices[0].message.content

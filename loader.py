@@ -20,13 +20,13 @@ def get_task_loader(args):
     if args.task in standard_csv_tasks:
         file = f'data/{args.task}/{args.div}.csv'
         rows = csv.reader(open(file))
-        return ((row[1], row[2]) for row in rows) 
+        return [(row[1], row[2]) for row in rows]
 
     # Handle intersection which needs 3 columns
     if args.task == 'intersection':
         file = f'data/{args.task}/{args.div}.csv' if args.div else f'data/{args.task}.csv'
         rows = csv.reader(open(file))
-        return ((row[1], row[2], row[3]) for row in rows)
+        return [(row[1], row[2], row[3]) for row in rows]
          
     # Handle GSM symbolic task
     if args.task == 'gsm_symbolic':
@@ -34,7 +34,7 @@ def get_task_loader(args):
         answer_list = []
         gsm_div = {'0': "symbolic", "1":"p1", "2":"p2"}
 
-        GSM_data = readf(f'data/GSM/GSM_{gsm_div[args.div]}.jsonl')
+        GSM_data = readf(f'data/_gsm_symbolic/GSM_{gsm_div[args.div]}.jsonl')
         count = 0
         for line in GSM_data.split('\n'):
             data = json.loads(line)
@@ -45,11 +45,22 @@ def get_task_loader(args):
                 break
         return zip(query_list, answer_list)
 
+    if args.task == 'gsm8k':
+        from datasets import load_from_disk
+        dataset = load_from_disk("data/gsm8k/")
+        query_list = []
+        answer_list = []
+        for i in range(100):
+            query_list.append(dataset['test'][i]['question'])
+            answer_list.append(dataset['test'][i]['answer'].split('#### ')[1])
+
+        return zip(query_list, answer_list)
+         
     # Handle game24 task
     if args.task == 'game24':
         rows = csv.reader(open(f'data/game24/24.csv'))
         next(rows)  # Skip header
-        return ((row[1], None) for row in rows)
+        return [(row[1], None) for row in rows]
 
 
 if __name__ == "__main__":

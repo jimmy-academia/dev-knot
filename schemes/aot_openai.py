@@ -16,6 +16,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+def cprint(*args, **kwargs):
+    verbose = False
+    if verbose:
+        print(*args, **kwargs)
 
 class OpenAI:
     def __init__(
@@ -48,7 +52,7 @@ class OpenAI:
         if api_base != "":
             # e.g. https://api.openai.com/v1/ or your custom url
             openai.api_base = api_base
-            print(f"Using custom api_base {api_base}")
+            cprint(f"Using custom api_base {api_base}")
 
         if api_model == "" or api_model is None:
             api_model = os.environ.get("OPENAI_API_MODEL", "")
@@ -56,7 +60,7 @@ class OpenAI:
             self.api_model = api_model
         else:
             self.api_model = "gpt-4o"
-        print(f"Using api_model {self.api_model}")
+        cprint(f"Using api_model {self.api_model}")
 
         self.use_chat_api = "gpt" in self.api_model
         self.strategy = strategy
@@ -90,7 +94,7 @@ class OpenAI:
             
             except RateLimitError as e:
                 sleep_duratoin = os.environ.get("OPENAI_RATE_TIMEOUT", 30)
-                print(
+                cprint(
                     f"{str(e)}, sleep for {sleep_duratoin}s, set it by env OPENAI_RATE_TIMEOUT"
                 )
                 time.sleep(sleep_duratoin) 
@@ -109,7 +113,7 @@ class OpenAI:
                 response = self.run(prompt, 400, 0.5, k)
                 text = self.openai_choice2text_handler(response.choices[0])
                 thoughts += [text]
-                # print(f'thoughts: {thoughts}')
+                # cprint(f'thoughts: {thoughts}')
             return thoughts
 
         else:
@@ -124,7 +128,7 @@ class OpenAI:
             state_text = state
         else:
             state_text = "\n".join(state)
-        print("New state generating thought:", state, "\n\n")
+        cprint("New state generating thought:", state, "\n\n")
         prompt = f"""
         Accomplish the task below by decomposing it as many very explicit subtasks as possible, be very explicit and thorough denoted by 
         a search process, highlighted by markers ‘1’,..., ‘3’ as “first operations” guiding subtree exploration for the OBJECTIVE, 
@@ -140,7 +144,7 @@ class OpenAI:
         ###################
         """
         thoughts = self.generate_text(prompt, k)
-        # print(f"Generated thoughts: {thoughts}")
+        # cprint(f"Generated thoughts: {thoughts}")
         return thoughts
 
     def generate_solution(self, initial_prompt, state, rejected_solutions=None):
@@ -160,7 +164,7 @@ class OpenAI:
             ###{rejected_solutions}###, 
             complete the {initial_prompt} without making the same mistakes you did with the evaluated rejected solutions. Be simple. Be direct. Provide intuitive solutions as soon as you think of them."""
             answer = self.generate_text(prompt, 1)
-            print(f"Generated Solution Summary {answer}")
+            cprint(f"Generated Solution Summary {answer}")
             return answer
         except Exception as e:
             logger.error(f"Error in generate_solutions: {e}")
@@ -176,9 +180,9 @@ class OpenAI:
                 if type(state) == str:
                     state_text = state
                 else:
-                    print(f"state: {state}")
+                    cprint(f"state: {state}")
                     state_text = "\n".join(state)
-                print(
+                cprint(
                     "We receive a state of type",
                     type(state),
                     "For state: ",
@@ -194,9 +198,9 @@ class OpenAI:
                 response = self.run(prompt, 10, 1)
                 try:
                     value_text = self.openai_choice2text_handler(response.choices[0])
-                    # print(f'state: {value_text}')
+                    # cprint(f'state: {value_text}')
                     value = float(value_text)
-                    print(f"Evaluated Thought Value: {value}")
+                    cprint(f"Evaluated Thought Value: {value}")
                 except ValueError:
                     value = 0
                 state_values[state] = value

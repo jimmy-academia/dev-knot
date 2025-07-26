@@ -1,7 +1,9 @@
 from argparse import ArgumentParser
 import os
 import json, jsonlines, csv
-os.environ["OPENAI_API_KEY"] = 
+
+from utils import readf
+os.environ["OPENAI_API_KEY"] = readf('../.openaiapi_key')
 from openai import OpenAI
 client = OpenAI()
 import tiktoken
@@ -15,6 +17,9 @@ from prompt import keyword_goal_prompt, keyword_example_prompt
 from prompt import review_goal_prompt, review_example_prompt
 from prompt import large_digit_goal_prompt, large_digit_example_prompt
 
+import ast
+from tqdm import tqdm
+
 
 # Function Define
 user_struct = lambda x: {"role": "user", "content": x}
@@ -25,15 +30,19 @@ servant = "You follow orders strictly. Output the answer without any additional 
 
 
 parser = ArgumentParser()
-parser.add_argument("dataset", default="data/all_arith/arith_08.csv")
-parser.add_argument("record", default="record.txt")
+# parser.add_argument("--dataset", default="data/keyword/countries.csv")
+# parser.add_argument("--dataset", default="data/keyword/2.csv")
+parser.add_argument("--dataset", default="data/keyword/4.csv")
+# parser.add_argument("dataset", default="data/all_arith/arith_08.csv")
+parser.add_argument("--record", default="record.txt")
 
 args = parser.parse_args()
 
 with open(args.dataset, 'r') as f:
     rows = csv.reader(f)
     correct = 0
-    for row in rows:
+    pbar = tqdm(rows, ncols=88, total=100, desc='old-knot')
+    for row in pbar:
         with open(args.record, 'a') as f:
             if "set_intersection" in args.dataset:
                 set1 = row[1]
@@ -49,7 +58,7 @@ with open(args.dataset, 'r') as f:
                 if "arith" in args.dataset or "addmul" in args.dataset:
                     goal_prompt = math_goal_prompt(seq)
                     ex_prompt = math_example_prompt()
-                elif "countries" in args.dataset:
+                elif "keyword" in args.dataset:
                     goal_prompt = keyword_goal_prompt(seq)
                     ex_prompt = keyword_example_prompt()
                 elif "digit" in args.dataset:
@@ -97,17 +106,33 @@ with open(args.dataset, 'r') as f:
                     f.write(res + '\n')
                     memory[title] = res
 
+            if "keyword" in args.dataset:
+                res = str(res)
+                try:
+                    if '[' in res:
+                        res = ast.literal_eval(res)
+                        res = f"[{', '.join(res)}]"
+                    else:
+                        res = f"[{res}]"
+                except:
+                    pass
+            
             f.write("--------------------our_ans-------------------\n")
             f.write(str(res) + '\n')
+
+            print(str(res))
             f.write("--------------------ans-------------------\n")
             f.write(ans + '\n')
 
+            print(ans)
+            # input()
             if str(res) == str(ans):
                 f.write("correct answer !!!\n")
                 correct += 1
             else:
                 f.write("error !!\n")
 
+            pbar.set_postfix(acc=correct/100)
     print(correct/100)
 
 

@@ -1346,8 +1346,8 @@ def run(
 
     orig_budget = budget
     # data_path = os.path.join(os.path.dirname(__file__), "countries.csv")
-    data_path = os.path.join(os.path.dirname(__file__), "2.csv")
-    # data_path = os.path.join(os.path.dirname(__file__), "4.csv")
+    # data_path = os.path.join(os.path.dirname(__file__), "2.csv")
+    data_path = os.path.join(os.path.dirname(__file__), "4.csv")
     data = []
     with open(data_path, "r") as f:
         reader = csv.reader(f)

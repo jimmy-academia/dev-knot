@@ -101,7 +101,7 @@ def write_to_csv(query_instances, output_file):
     """
     with open(output_file, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow(['id', 'query', 'answer'])
+        # writer.writerow(['id', 'query', 'answer'])
         
         for i, (reviews, num_positive) in enumerate(query_instances):
             # Format reviews with tags
@@ -120,7 +120,7 @@ def main():
     reviews_by_stars = load_yelp_reviews(yelp_file_path, max_reviews=10000)
     
     # Create and write files for different review counts
-    for review_count in [10, 20, 30]:
+    for review_count in [5, 15]:
         print(f"Creating query instances with {review_count} reviews...")
         query_instances = create_query_instances(
             reviews_by_stars, 

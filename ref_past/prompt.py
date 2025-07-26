@@ -121,13 +121,27 @@ def set_example_prompt():
 def keyword_goal_prompt(seq):
     prompt = f"""
 Input: {seq}
+Context: Extract every occurrence of country names, preserving duplicates and maintaining their original order in the paragraph. You can seperate article into sentences first. 
+"""
+    return prompt
+"""
+Input: {seq}
 Context: Output all words about countries in the article. You can seperate article into sentences first.
 The maximum number of sentences is 20.
 """
-    return prompt
 
 def keyword_example_prompt():
-    prompt = """
+    prompt = """example length = 20
+(0)=LLM("Split the following article into sentences: '{(input)}'. Output an array.")
+(1)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[0]"  Output [] if not exist any country.")
+(2)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[1]"  Output [] if not exist any country.")
+(3)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[2]"  Output [] if not exist any country.")
+...
+(20)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[19]"  Output [] if not exist any country.")
+(21)=LLM("Combine {(1)}, {(2)}, {(3)}, {(4)}, {(5)}, {(6)}, {(7)}, {(8)}, {(9)}, {(10)}, {(11)}, {(12)}, {(13)}, {(14)}, {(15)}, {(16)}, {(17)}, {(18)}, {(19)}, {(20)} in one list. Repeated is allowed. Don't add quotes around country names.")"""
+    return prompt
+
+"""
 ```example length = 20
 (0)=LLM("Split the following article into sentences: '{(input)}'. Output an array.")
 (1)=LLM("Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[0]"  Output [] if not exist any country.")
@@ -137,7 +151,6 @@ def keyword_example_prompt():
 (20)=LLM("Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[19]"  Output [] if not exist any country.")
 (21)=LLM("Combine {(1)}, {(2)}, {(3)}, {(4)}, {(5)}, {(6)}, {(7)}, {(8)}, {(9)}, {(10)}, {(11)}, {(12)}, {(13)}, {(14)}, {(15)}, {(16)}, {(17)}, {(18)}, {(19)}, {(20)} in one array. Repeated is allowed.")
 """
-    return prompt
 
 def review_goal_prompt(seq):
     prompt = f"""

@@ -44,7 +44,7 @@ And a solution structure example for four numbers:
 %s
 
 Please use your knowledge to create a solution structure for five numbers
-CAREFULLY CHECK EVERYSTEP. MAKE SURE IT HAS THE INPUT FIELD {(N)} IT NEEDS TO REFERENCE OUTPUT FROM A PREVIOUS STEP. Make sure it is in the correct syntax. E.g., (from (0)) should be {(0)}!!! MAKE SURE EACH STEP REFERENCES THE CORRESPONDING STEP, FOLLOWING THE SOLUTION STRUCTURE FOR FOUR NUMBERS. MAKE SURE THE EXAMPLE IN THE INSTRUCTION ARE UPDATED FROM FOUR NUMBER TO FIVE NUMBER CASE, I.E. ADD ONE MORE NUMBER TO THE EXAMPLE, e.g., [2 \times 3 4 8 | 6 4 8] becomes [2 \times 3 4 8 1 | 6 4 8 1]
+CAREFULLY CHECK EVERYSTEP. MAKE SURE IT HAS THE INPUT FIELD {(N)} IT NEEDS TO REFERENCE OUTPUT FROM A PREVIOUS STEP. Make sure it is in the correct syntax. E.g., (from (0)) should be {(0)}!!! MAKE SURE EACH STEP REFERENCES THE CORRESPONDING STEP, FOLLOWING THE SOLUTION STRUCTURE FOR FOUR NUMBERS. MAKE SURE THE EXAMPLE IN THE INSTRUCTION ARE UPDATED FROM FOUR NUMBER TO FIVE NUMBER CASE, I.E. ADD ONE MORE NUMBER TO THE EXAMPLE, e.g., [2 \\times 3 4 8 | 6 4 8] becomes [2 \\times 3 4 8 1 | 6 4 8 1]
 """
 
         self.script_prompt = """
@@ -75,7 +75,7 @@ Output only the final script.
 
 """
             
-        cache_script = Path(f'cache/script_5rknot-o3-mini-high')
+        cache_script = Path(f'cache/script_rknot-4o')
         # cache_knowledge = Path(f'cache/knowledge_5rknot-{self.args.planner_llm}')
 
         if cache_script.exists():
@@ -83,21 +83,24 @@ Output only the final script.
             self.script = readf(cache_script)
 
         else:
-            prompt = self.knowledge_prompt%(context, script)
-            print('=======')
-            print(prompt)
-            print('=======')
-            input()
+            if not Path('cache/knowedge_rknot-o4-mini-high').exists():
+                prompt = self.knowledge_prompt%(context, script)
+                print('=======')
+                print(prompt)
+                print('=======')
+                input()
             # knowledge = self.llm_answer(prompt, True)
 
-            knowledge = readf('cache/knowedge_5rknot-o3-mini-high')
+            # knowledge = readf('cache/knowedge_5rknot-o3-mini-high')
+            knowledge = readf('cache/knowedge_rknot-o4-mini-high')
 
             prompt = self.script_prompt%(context, script, knowledge)
             print('=======')
             print(prompt)
             print('=======')
             input()
-            self.script = readf('cache/script_5rknot-o1')
+            # self.script = readf('cache/script_5rknot-o1')
+            # self.script = readf('cache/script_rknot-o4-mini-high')
 
         # print(self.script)
 
@@ -133,8 +136,8 @@ Output only the final script.
                 print(f"Error formatting instruction {idx}: {e}")
                 check()
 
-            print(f">>> original: <<<\n{instruction_text}")
-            print(f">>> formatted: <<<\n{formatted_instruction}")
+            # print(f">>> original: <<<\n{instruction_text}")
+            # print(f">>> formatted: <<<\n{formatted_instruction}")
 
             # Execute the instruction
             output = self.llm_answer(formatted_instruction, temperature=0.7)

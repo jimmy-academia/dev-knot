@@ -4,10 +4,10 @@ from functools import partial
 
 import logging
 from .base import BaseScheme
-from debug import *
+from tqdm import tqdm
 
 Task_Specific_Concept = {
-    'yelp': "Output how many positive reviews in the input. Check every review one by one in the input.",
+    'yelp': "Output how many positive reviews in the input. First summarize the reviews step-by-step, than check every review one by one in the input.",
     'keyword': "Output all words about countries in the article. You can seperate article into sentences first. The maximum number of sentences is 20.",
     'sorting': "Sort input in ascending order. You can use counting sort.",
     'intersection': "Find the intersection of two input. You can check every element in set1 one by one.",
@@ -20,23 +20,49 @@ You can only operate two numbers at a time. Calculate from left to right. Do mul
 }
 
 Task_Specific_Example = {
-    'yelp': """
+    'yelp': """example for length = 3
+(0)=LLM("Let's think step-by-step. Summarize the following batch of reviews, review-by-review. Maintain the same sentiment in each summary. Continue to use [review] to delineate: {(input)}")
+(1)=LLM("CSplit the following batch of Yelp reviews into separate items. 
+Output a Python list where each review is a string element, preserving the [REVIEW_X] tags. Format your response ONLY as a valid Python list like this: ["[REVIEW_1] First review text...", "[REVIEW_2] Second review text...",...] Do not include any explanations or additional text outside the list. Reviews to split: {(0)}")
+(2)=LLM("Output Positive or Negative based on the following review sentiment: {(1)}[0].")
+(3)=LLM("Output Positive or Negative based on the following review sentiment: {(1)}[1].")
+(4)=LLM("Output Positive or Negative based on the following review sentiment: {(1)}[2].")
+(5)=LLM("[{(2)}, {(3)}, {(4)}], Count how many result shows that it is a positive review. Only output a number.")""",
+    'oldyelp':"""
 ```example for length = 10
-(0)=LLM("Check the following review is Positive or Negative: {(input)}[0].")
-(1)=LLM("Check the following review is Positive or Negative: {(input)}[1].")
-(2)=LLM("Check the following review is Positive or Negative: {(input)}[2].")
+(0)=LLM("Split the following batch of review: '{(input)}'. Output an array.")
+(1)=LLM("Check the following review is Positive or Negative: {(0)}[0].")
+(2)=LLM("Check the following review is Positive or Negative: {(0)}[1].")
+(3)=LLM("Check the following review is Positive or Negative: {(0)}[2].")
 ...
-(9)=LLM("Check the following review is Positive or Negative: {(input)}[length-1].")
+(9)=LLM("Check the following review is Positive or Negative: {(0)}[length-1].")
 (10)=LLM("[{(0)}, {(1)}, {(2)}, {(3)}, {(4)}, {(5)},.... ,{(length-1)}], output the number of Positive.")""",
     'keyword': """
 ```example length = 20
 (0)=LLM("Split the following article into sentences: '{(input)}'. Output an array.")
-(1)=LLM("Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[0]"  Output [] if not exist any country.")
-(2)=LLM("Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[1]"  Output [] if not exist any country.")
-(3)=LLM("Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[2]"  Output [] if not exist any country.")
+(1)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[0]"  Output [] if not exist any country.")
+(2)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[1]"  Output [] if not exist any country.")
+(3)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[2]"  Output [] if not exist any country.")
 ...
-(20)=LLM("Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[19]"  Output [] if not exist any country.")
-(21)=LLM("Combine {(1)}, {(2)}, {(3)}, {(4)}, {(5)}, {(6)}, {(7)}, {(8)}, {(9)}, {(10)}, {(11)}, {(12)}, {(13)}, {(14)}, {(15)}, {(16)}, {(17)}, {(18)}, {(19)}, {(20)} in one array. Repeated is allowed.")""",
+(20)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[19]"  Output [] if not exist any country.")
+(21)=LLM("Combine {(1)}, {(2)}, {(3)}, {(4)}, {(5)}, {(6)}, {(7)}, {(8)}, {(9)}, {(10)}, {(11)}, {(12)}, {(13)}, {(14)}, {(15)}, {(16)}, {(17)}, {(18)}, {(19)}, {(20)} in one list. Repeated is allowed. Don't add quotes around country names.")""",
+    'longyelp': """example for length = 10
+(0)=LLM("Split the following batch of review: '{(input)}'. Output an array.")
+(1)=LLM("Check if the following review is Positive. Example: Input: [REVIEW] A menu that satisfies everyone's cravings! Clean, trendy, and delicious! I definitely recommend going early (before 9 am) as the wait tends to get longer after 9 am! But honestly, it is soooo worth the wait. You will leave there feeling so incredible satisfied! This is a positive review. [REVIEW] I am a long term frequent customer of this establishment. I just went in to order take out (3 apps) and was told they're too busy to do it. Really? The place is maybe half full at best. Does your dick reach your ass? Yes? Go fuck yourself! I'm a frequent customer AND great tipper. Glad that Kanella just opened. NEVER going back to dmitris! Output: Positive Input: {(0)}[0]. Output:")
+(2)=LLM("Check if the following review is Positive. Example: [REVIEW] A menu that satisfies everyone's cravings! Clean, trendy, and delicious! I definitely recommend going early (before 9 am) as the wait tends to get longer after 9 am! But honestly, it is soooo worth the wait. You will leave there feeling so incredible satisfied! This is a positive review. [REVIEW] I am a long term frequent customer of this establishment. I just went in to order take out (3 apps) and was told they're too busy to do it. Really? The place is maybe half full at best. Does your dick reach your ass? Yes? Go fuck yourself! I'm a frequent customer AND great tipper. Glad that Kanella just opened. NEVER going back to dmitris! Output: Negative Input: {(0)}[1]. Output:")
+(3)=LLM("Check if the following review is Positive. Example: [REVIEW] A menu that satisfies everyone's cravings! Clean, trendy, and delicious! I definitely recommend going early (before 9 am) as the wait tends to get longer after 9 am! But honestly, it is soooo worth the wait. You will leave there feeling so incredible satisfied! This is a positive review. [REVIEW] I am a long term frequent customer of this establishment. I just went in to order take out (3 apps) and was told they're too busy to do it. Really? The place is maybe half full at best. Does your dick reach your ass? Yes? Go fuck yourself! I'm a frequent customer AND great tipper. Glad that Kanella just opened. NEVER going back to dmitris! Output: Negative Input: {(0)}[2]. Output:")
+...
+(9)=LLM("Check if the following review is Positive. Example: [REVIEW] A menu that satisfies everyone's cravings! Clean, trendy, and delicious! I definitely recommend going early (before 9 am) as the wait tends to get longer after 9 am! But honestly, it is soooo worth the wait. You will leave there feeling so incredible satisfied! This is a positive review. [REVIEW] I am a long term frequent customer of this establishment. I just went in to order take out (3 apps) and was told they're too busy to do it. Really? The place is maybe half full at best. Does your dick reach your ass? Yes? Go fuck yourself! I'm a frequent customer AND great tipper. Glad that Kanella just opened. NEVER going back to dmitris! Output: Negative Input: {(0)}[length-1]. Output:")
+(10)=LLM("[{(0)}, {(1)}, {(2)}, {(3)}, {(4)}, {(5)},.... ,{(length-1)}], Count how many result shows that it is a positive review. Only output a number.")""",
+    'keyword': """
+```example length = 20
+(0)=LLM("Split the following article into sentences: '{(input)}'. Output an array.")
+(1)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[0]"  Output [] if not exist any country.")
+(2)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[1]"  Output [] if not exist any country.")
+(3)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[2]"  Output [] if not exist any country.")
+...
+(20)=LLM("Carefully Extract all country names (no continents) in the order of their appearance from the following sentence (repeated is allowed): "{(0)}[19]"  Output [] if not exist any country.")
+(21)=LLM("Combine {(1)}, {(2)}, {(3)}, {(4)}, {(5)}, {(6)}, {(7)}, {(8)}, {(9)}, {(10)}, {(11)}, {(12)}, {(13)}, {(14)}, {(15)}, {(16)}, {(17)}, {(18)}, {(19)}, {(20)} in one list. Repeated is allowed. Don't add quotes around country names.")""",
     'sorting': """
 ```example for length = 32 (Script do not contain this line.)
 (0)=LLM("Initialize an array of size 10 to zero.")
@@ -119,10 +145,10 @@ The Input section is the input query. The Context section is the goal we want to
         self.system_servent = "You follow orders strictly. Output the answer without any additional information."
 
 
-    def llm_answer(self, prompt, planner=False, temperature=0):
-        model = self.args.planner_llm if planner else self.args.worker_llm
-        message = [system_struct(self.system_servent), user_struct(prompt)]
-        return self.llm_call(message, model)
+    # def llm_answer(self, prompt, planner=False, temperature=0):
+    #     model = self.args.planner_llm if planner else self.args.worker_llm
+    #     message = [system_struct(self.system_servent), user_struct(prompt)]
+    #     return self.llm_call(message, model)
 
     def prep_task_spcefics(self):
         self.tsp_context = Task_Specific_Concept.get(self.args.task)
@@ -130,13 +156,18 @@ The Input section is the input query. The Context section is the goal we want to
 
     def solve_query(self, query):
         goal_prompt = f'Input: {query}\nContext: {self.tsp_context}'
+        print(goal_prompt)
+        
         knowledge = self.llm_answer(self.knowledge_prompt%goal_prompt, True)
+        print(knowledge)
 
         script_prompt = self.script_prompt%(self.tsp_example, knowledge, goal_prompt)
         script = self.llm_answer(script_prompt, True)
+        print(script)
+        # input('pause')
 
         cache = {}
-        for step in script.split('\n'):
+        for step in tqdm(script.split('\n'), desc="Processing steps", ncols=90):
             if '=LLM(' not in step:
                 continue
 
@@ -148,16 +179,54 @@ The Input section is the input query. The Context section is the goal we want to
                 instruction = re.sub(r'\{\((\w+)\)\}(?:\[(\d+)\])?', _sub_with_args, instruction)
             except Exception as e:
                 print(f"Error during substitution: {e}")
+                check()
 
+            print("<<<<<<")
+            print(instruction)
             output = self.llm_answer(instruction)
+            print(">>>>>>")
+            print(output)
+            # input()
 
             try:
                 cache[index] = ast.literal_eval(output)
             except:
                 cache[index] = output
 
+        print('answer:', self.ground_truth, output, self.ground_truth == output)
+        input('finished 1 sample===> pause|')
         return output
     
+# def _sub(match, query, cache):
+#     var_name = match.group(1)
+#     index_str = match.group(2)  # This will be None if no index is specified
+    
+#     # Determine the base value based on variable name
+#     if var_name == 'input':
+#         # Handle the input variable specially
+#         import ast
+#         try:
+#             base_value = ast.literal_eval(query)
+#         except (SyntaxError, ValueError):
+#             # If parsing fails, return the raw query
+#             base_value = query
+#     else:
+#         # For all other variables, get from cache
+#         base_value = cache.get(var_name, '')
+    
+#     # Apply indexing if needed and possible
+#     if index_str is not None and isinstance(base_value, (list, tuple)) and base_value:
+#         index = int(index_str)
+#         if 0 <= index < len(base_value):
+#             return base_value[index]
+#         else:
+#             # Index out of range
+#             return ''
+    
+#     # Return the base value if no indexing or indexing not applicable
+#     return base_value
+
+
 def _sub(match, query, cache):
     var_name = match.group(1)
     index_str = match.group(2)  # This will be None if no index is specified
@@ -179,11 +248,15 @@ def _sub(match, query, cache):
     if index_str is not None and isinstance(base_value, (list, tuple)) and base_value:
         index = int(index_str)
         if 0 <= index < len(base_value):
-            return base_value[index]
+            return str(base_value[index])
         else:
             # Index out of range
             return ''
     
-    # Return the base value if no indexing or indexing not applicable
-    return base_value
-
+    # Ensure we return a string, even for list types
+    if isinstance(base_value, (list, tuple)):
+        import json
+        return json.dumps(base_value)
+    
+    # Return the base value as a string
+    return str(base_value)

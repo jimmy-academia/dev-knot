@@ -57,8 +57,8 @@ class Selfdiscover(BaseScheme):
             prompt = 'We are find the intersection of sets: '
         if self.args.task == 'sorting':
             prompt = 'We are sorting a list of numbers: '
-        if self.args.task == 'keyword_counting':
-            prompt = 'We are extracting the names of countries occurred in the paragraph: '
+        if self.args.task == 'keyword':
+            prompt = 'We are extracting every occurrence of country names, preserving duplicates and maintaining their original order in the paragraph: '
         if self.args.task == 'yelp':
             prompt = 'We are counting the number of positive reviews from the review list: '
         return prompt
@@ -108,11 +108,11 @@ class Selfdiscover(BaseScheme):
         reasoning_structure = self.implement_reasoning_structure(adapted_modules, task_example)
         answer = self.execute_reasoning_structure(reasoning_structure, task_example)
         if self.args.task == 'large_digit' or self.args.task == 'all_arith' or self.args.task == 'yelp':
-            output = self.llm_answer("extract the numerical of the answer:"+answer)
+            output = self.llm_answer("extract the numerical of the answer from: "+answer+" Only output a number.")
         elif self.args.task == 'set_intersection':
             # answer = answer.split(', ')
             # output = [int(o) for o in answer]
             output = self.llm_answer(f"extract the set form of the answer:{answer}")
-        elif self.args.task == 'sorting' or self.args.task == 'keyword_counting':
-            output = self.llm_answer(f"extract the list form of the answer:{answer}")
+        elif self.args.task == 'sorting' or self.args.task == 'keyword':
+            output = self.llm_answer(f"extract the Python list form of the answer:{answer}")
         return output

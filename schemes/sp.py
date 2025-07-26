@@ -335,11 +335,11 @@ Answer: [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4,
 '''
 
 keyword_counting_subquestions = [
-    "Identify the country names from the first portion of the text.",
-    "Identify the country names from the next portion of the text.",
-    "Continue identifying the country names from the next section.",
-    "List any remaining country names from the final portion of the text.",
-    "What is the final list of country names extracted?"
+    "Carefully Extract all country names (no continents) in the order of their appearance from the following portion of the text (repeated is allowed).",
+    "Carefully Extract all country names (no continents) in the order of their appearance from the next portion of the text (repeated is allowed).",
+    "Carefully Extract all country names (no continents) in the order of their appearance from the next portion of the text (repeated is allowed).",
+    "Carefully Extract all country names (no continents) in the order of their appearance from the final portion of the text (repeated is allowed).",
+    "Combine the list. What is the final list of country names extracted? Output in a list format such as [Country_name, Country_name, ... Country_name]."
 ]
 
 keyword_counting_example = '''
@@ -443,14 +443,14 @@ subquestion_dict = {'large_digit':{'8':large_digit_8_subquestions,'16':large_dig
                     'all_arith':all_arith_subquestions,
                     'set_intersection':{'032':set_intersection_32_subquestions, '064':set_intersection_64_subquestions, '128':set_intersection_128_subquestions},
                     'sorting':{'016':sorting_subquestions,'032':sorting_subquestions,'064':sorting_subquestions},
-                    'keyword_counting':keyword_counting_subquestions,
+                    'keyword':keyword_counting_subquestions,
                     'yelp':yelp_subquestions}
 
 Task_Specific_Example = {'large_digit':{'8':large_digit_8_examples,'16':large_digit_16_examples,'32':large_digit_32_examples},
                          'all_arith':{'08':all_arith_8_solving_examples,'16':all_arith_16_solving_examples,'32':all_arith_32_solving_examples},
                          'set_intersection':{'032':set_intersection_32_examples,'064':set_intersection_64_examples,'128':set_intersection_128_examples},
                          'sorting':{'016':sorting_16_examples,'032':sorting_32_examples,'064':sorting_64_examples},
-                         'keyword_counting':keyword_counting_example,
+                         'keyword':keyword_counting_example,
                          'yelp':yelp_example}
 
 def get_text_chunks(text):
@@ -479,14 +479,14 @@ class SuccessivePrompting(BaseScheme):
             successive_prompt = 'To find the intersection of sets %s, the next question to answer is:'
         if self.args.task == 'sorting':
             successive_prompt = 'To find the sorting result of list %s, the next question to answer is:'
-        if self.args.task == 'keyword_counting':
+        if self.args.task == 'keyword':
             successive_prompt = 'To find the list of countries occurred in the paragraph %s, the next question to answer is:'
         if self.args.task == 'yelp':
             successive_prompt = 'To count the number of positive reviews from the review list %s, the next question to answer is:'
         return successive_prompt
 
     def prep_task_spcefics(self):
-        if self.args.div:
+        if self.args.task not in ['keyword', 'yelp']:
             successive_solving_example = Task_Specific_Example.get(self.args.task).get(self.args.div)
         else:
             successive_solving_example = Task_Specific_Example.get(self.args.task)
@@ -500,6 +500,7 @@ class SuccessivePrompting(BaseScheme):
         return successive_solving_example, succ_steps
     
     def context_initializer(self, example, query):
+        instruction = ""
         successive_prompt = self.prep_const_prompt()
         context = example + successive_prompt % str(query)
         return context
@@ -513,20 +514,22 @@ class SuccessivePrompting(BaseScheme):
             prompt = generate_set_intersection_prompt(question, context)
         if self.args.task == 'sorting':
             prompt = generate_sorting_prompt(question, context)
-        if self.args.task == 'keyword_counting':
+        if self.args.task == 'keyword':
             prompt = generate_keyword_counting_prompt(question, context, text)
         if self.args.task == 'yelp':
             prompt = generate_yelp_prompt(question, context, text)
         return prompt
     
     def solve_query(self, query):
+        # input(query)
+        # print(query)
         successive_solving_example, succ_steps = self.prep_task_spcefics()
         context = self.context_initializer(successive_solving_example, query)
         for i in range(succ_steps):
             question = self.llm_answer(context)
             context += question
             answer = self.llm_answer(context)
-            print(f"Q: {question}\nA: {answer}\n")
+            # print(f"Q: {question}\nA: {answer}\n")
             if i != succ_steps-1:
                 context += f'\nFor question {question}, we already know the answer is {answer}.\nThe next question to answer is: '
             else:
@@ -538,8 +541,11 @@ class SuccessivePrompting(BaseScheme):
             # answer = answer.split(', ')
             # output = [int(o) for o in answer]
             output = self.llm_answer(f"extract the set form of the answer:{answer}")
-        elif self.args.task == 'sorting' or self.args.task == 'keyword_counting':
+        elif self.args.task == 'sorting':
             output = self.llm_answer(f"extract the list form of the answer:{answer}")
+        elif self.args.task == 'keyword':
+            output = self.llm_answer(f"{answer}. Only output the the with the square braket list of country names. format the answer in a one-line list (square brackets) without quotes. example: [Country, Country, Country, ..., Country]")
         
-        logging.info(f'>>>>>>>>>>>> final result: {output} <<<<<<<<<<<<<')
+        # logging.info(f'>>>>>>>>>>>> final result: {output} <<<<<<<<<<<<<')
+        # input()
         return output

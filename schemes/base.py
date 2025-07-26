@@ -3,12 +3,16 @@ import logging
 from collections import defaultdict
 from utils import readf, user_struct, system_struct, dumpj
 
+from tqdm import tqdm
+from debug import check
+
 class BaseScheme(object):
     def __init__(self, args, task_loader):
         super(BaseScheme, self).__init__()
         self.args = args
         self.task_loader = task_loader
         self.check_openai_api()
+        self.system_servent = None
 
     def check_openai_api(self):
         self.client = openai.OpenAI(api_key=readf('.openaiapi_key'))
@@ -38,22 +42,56 @@ class BaseScheme(object):
         response = response.choices[0].message.content
         return response
 
-    def operate(self):
+    def llm_answer(self, prompt, planner=False, temperature=0):
+        model = self.args.planner_llm if planner else self.args.worker_llm
+        if 'gpt' in model:
+            if self.system_servent is not None:
+                message = [system_struct(self.system_servent), user_struct(prompt)]
+            else:
+                message = [user_struct(prompt)]
+            # logging.info(" <<<< input prompt")
+            # logging.info(message)
+            response = self.client.chat.completions.create(
+                        model = model,
+                        messages = message,
+                        temperature = temperature,
+                    )
+            response = response.choices[0].message.content
+            # logging.info(" >>>> \n" + response)
+        else:
+            print('llama!')
 
+        return response
+
+
+    def operate(self):
+        self.prep_const_prompt()
+        self.prep_task_spcefics()
+        
         results = defaultdict(list)
         results['accuracy'] = 0
         correct = total = 0
 
-        for query, answer in self.task_loader:
+        loader_bar = tqdm(self.task_loader, ncols=88, desc=f"[{self.args.scheme}]", total=100)
+        for query, answer in loader_bar:
+            self.ground_truth = answer
+            
             output = self.solve_query(query)
-            logging.info(f'=> output: {output} vs answer {answer} <<<')
-
+            # logging.info(f'=> output: {output} vs answer {answer} <<<')
             results['query'].append(query)
             results['output'].append(output)
             results['answer'].append(answer)
             correct += int(output == answer)
             total += 1
             results['accuracy'] = correct/total
+            loader_bar.set_postfix(acc=correct/total)
+            # dumpj(results, self.args.record_path)
+            # print(output, answer)
+            # return True
+
+
+            # check()
+
 
         results['info'] = f"Correct: {correct}/Total: {total}"
         dumpj(results, self.args.record_path)
@@ -63,13 +101,30 @@ class ZeroFewShot(BaseScheme):
     def prep_const_prompt(self):
         self.system_servent = "You follow orders strictly. Output the answer without any additional information."
     def prep_task_spcefics(self):
-        if args.scheme == 'few':
-            self.examples = Few_Shot_Example.get(self.args.task).get(self.args.div)
+        self.context = ContextPrompts[self.args.task]
+        if self.args.scheme == 'few':
+            self.examples = Few_Shot_Example.get(self.args.task).get(self.args.div) if self.args.task not in ['yelp', 'keyword'] else Few_Shot_Example.get(self.args.task)
         else: 
             self.examples = ""
     def solve_query(self, query):
-        return self.llm_call([system_struct(self.system_servent), user_struct(query + " " + self.examples)])
+        # print(query)
+        output = self.llm_call([system_struct(self.system_servent), user_struct(self.context+self.examples+query)])
+        if self.args.task == 'keyword':
+            final_output = self.llm_answer(f"format the answer {output} in a one-line list (square brackets) without quotes. example: [Country, Country, Country, ..., Country]")
+        elif self.args.task == 'yelp':
+            final_output = self.llm_answer(f"Based on the {output}, output the number of positive reviews. Output only an integer.")
+        else:
+            input('TODO!')
+            output = output
 
+        # input(output)
+        return output
+
+
+ContextPrompts = {
+    'keyword': 'We are extracting every occurrence of country names, preserving duplicates and maintaining their original order in the paragraph: ',
+    'yelp': 'We are counting the number of positive reviews from the review list: '
+}
 
 Few_Shot_Example = {
     'yelp': """

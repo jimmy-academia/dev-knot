@@ -1,0 +1,24 @@
+Here’s a parallel solution structure for **five** numbers—updated step-by-step from the four-number version. Note the added extra reduction from 5→4 and the adjusted examples (e.g. `[2 × 3 4 8 1 | 6 4 8 1]`):
+
+```
+(0)=LLM(" You are solving for Game of 24. You need to carefully design an arithmetic expression with all the numbers given to you to form 24. You must use each number exactly once. You may use + - × and parentheses. Hint: 24 can be obtained by 1×24, 2×12, 3×8, 4×6 or 1+23, 2+22, … 12+12. 1×anything keeps it unchanged. YOU CAN ONLY USE THE NUMBERS GIVEN TO YOU and NOTHING ELSE. Each step you can only connect 2 numbers.  Given {(input)}, what is the most possible next step? Give me 12 most likely options that combine two of the numbers arithmetically using +, -, ×.")
+(1)=LLM(" You are solving for Game of 24…  Given {(input)}, what is the most possible next step? Here are 12 options that combine two of the numbers arithmetically. {(0)} Analyze each option and consider whether the remaining **four** values may be combined through subsequent steps to obtain 24.")
+(2)=LLM(" You are solving for Game of 24…  The numbers are {(input)}. {(1)} Conduct the chosen step and obtain the partial solution. Output the current state after taking the step as `[arithmetic expression | four remaining values]`, such as `[2 × 3 4 8 1 | 6 4 8 1]`. Only output the state and nothing else.")
+(3)=LLM("{(2)} Output the **four** values on the right-hand side of the square bracket.")
+(4)=LLM(" You are solving for Game of 24…  Given {(3)}, what is the most possible next step? Give me 12 options that combine two of the numbers arithmetically. {(3)} Analyze each option and consider whether the remaining **three** values may be combined to obtain 24.")
+(5)=LLM(" You are solving for Game of 24…  The numbers are {(3)}. {(4)} Conduct the chosen step and obtain the partial solution. Output the current state after taking the step as `[arithmetic expression | three remaining values]`, such as `[1 × 6 4 2 | 6 4 2]`. Only output the state and nothing else.")
+(6)=LLM("{(5)} Output the **three** values on the right-hand side of the square bracket.")
+(7)=LLM(" You are solving for Game of 24…  Given {(6)}, what is the most possible next step? Give me 12 options that combine two of the numbers arithmetically. {(6)} Analyze each option and consider whether the remaining **two** values may be combined to obtain 24.")
+(8)=LLM(" You are solving for Game of 24…  The numbers are {(6)}. {(7)} Conduct the chosen step and obtain the partial solution. Output the current state after taking the step as `[arithmetic expression | two remaining values]`, such as `[4 + 6 2 | 10 2]`. Only output the state and nothing else.")
+(9)=LLM("{(8)} Output the **two** values on the right-hand side of the square bracket.")
+(10)=LLM(" You are solving for Game of 24…  The numbers are {(9)}. How do you obtain 24 from these two values?")
+(11)=LLM("{(2)} Output the arithmetic expression on the left-hand side of the square bracket.")
+(12)=LLM("{(5)} Output the arithmetic expression on the left-hand side of the square bracket.")
+(13)=LLM("{(8)} Output the arithmetic expression on the left-hand side of the square bracket.")
+(14)=LLM(" You are solving for Game of 24…  Given {(input)}, we have taken these steps:  
+Step 1: {(11)}  
+Step 2: {(12)}  
+Step 3: {(13)}  
+Step 4: {(10)}  
+What is the correct arithmetic expression that obtains 24?")
+```
