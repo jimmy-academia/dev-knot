@@ -7,6 +7,7 @@ from .base import BaseScheme
 from tqdm import tqdm
 
 Task_Specific_Concept = {
+    'gsm8k': "Solve the final problem to find the sum of the answer to each problems. Solve the problems one by one, then add the answers together.",
     'yelp': "Output how many positive reviews in the input. First summarize the reviews step-by-step, than check every review one by one in the input.",
     'keyword': "Output all words about countries in the article. You can seperate article into sentences first. The maximum number of sentences is 20.",
     'sorting': "Sort input in ascending order. You can use counting sort.",
@@ -20,6 +21,13 @@ You can only operate two numbers at a time. Calculate from left to right. Do mul
 }
 
 Task_Specific_Example = {
+    'gsm8k': """example for length = 2
+(0)=LLM("Split the into a list of separate problems as : ["Problem 1...", "Problem 2...", ..., "Final Problem: what is the sum of the answers from all of the problems?"] \n {(input)}")
+(1)=LLM("{(0)}[0] Let's think step by step.")
+(2)=LLM("extract the numerical from the answer: {(1)}")
+(3)=LLM("{(0)}[1] Let's think step by step.")
+(4)=LLM("extract the numerical from the answer: {(3)}")
+(5)=LLM("Combine {(2)} and {(4)}. Only output the number.")""",
     'yelp': """example for length = 3
 (0)=LLM("Let's think step-by-step. Summarize the following batch of reviews, review-by-review. Maintain the same sentiment in each summary. Continue to use [review] to delineate: {(input)}")
 (1)=LLM("CSplit the following batch of Yelp reviews into separate items. 
@@ -186,7 +194,7 @@ The Input section is the input query. The Context section is the goal we want to
             output = self.llm_answer(instruction)
             print(">>>>>>")
             print(output)
-            # input()
+            input()
 
             try:
                 cache[index] = ast.literal_eval(output)

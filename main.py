@@ -26,9 +26,10 @@ def set_arguments():
     parser.add_argument('--ckpt', type=str, default='ckpt')
 
     # Task, prompt scheme
-    parser.add_argument('--scheme', type=str, default='knot') 
+    parser.add_argument('--scheme', type=str, default='zerocot') 
+    # parser.add_argument('--scheme', type=str, default='gknot') 
     # parser.add_argument('--scheme', type=str, default='l2m')
-    parser.add_argument('--task', type=str, default='gsm8k')
+    parser.add_argument('--task', type=str, default='healthcare')
     # yelp:[10, 20, 30], keyword:[4, 2, 1], sorting:[16, 32, 64], intersection:[32, 64, 128], arithmetic:[8, 16, 32], large_digit:[8, 16, 32]
     # addition:[8, 16, 32]; game24; gsm8k
 
@@ -37,15 +38,16 @@ def set_arguments():
     return args
 
 def main():
+    input('Do healthcare!!! ')
     args = set_arguments()
 
     if args.scheme == 'rknot':
         args.planner_llm = "o1-mini"
         args.worker_llm = "chatgpt-4o-latest"
-    elif args.scheme == 'gsm8k':
-        input('WARNING: todo==> use game24 approach for gsm8k')
-        args.planner_llm = "chatgpt-4o-latest"
-        args.worker_llm = "chatgpt-4o-latest"
+    # elif 'gsm8k' in args.scheme:
+        # input('WARNING; does not work!!')
+        # args.planner_llm = "chatgpt-4o-latest"
+        # args.worker_llm = "chatgpt-4o-latest"
 
     args.overwrite=True
     set_seeds(args.seed)

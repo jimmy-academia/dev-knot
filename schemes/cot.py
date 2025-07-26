@@ -9,6 +9,7 @@ ContextPrompts = {
     'yelp': 'We are counting the number of positive reviews from the review list: ',
     'addition': 'We are calculating the arithmetic result of input sequence: ',
     'arithmetic': 'We are calculating the arithmetic result of input sequence: ',
+    'gsm8k': 'We are solving the math problems and adding up the answers to give the final answer.'
 }
 Task_Specific_Example = {
     'addition': """Input: 8+2+7+3+5+5+1+9
@@ -235,11 +236,18 @@ class ZeroCoT(BaseScheme):
         return final_output
 
     def solve_query(self, query):
+        print(query)
         output = self.llm_answer(self.context + query + self.cot_prompt)
+        print()
+        print()
+        print(output)
+        print()
+        print()
+        input('pause')
         output = self.extract_answer(output)
+        logging.info(f'>>>>>>>>>>>> final result: {output} vs ground truth: {self.ground_truth} <<<<<<<<<<<<<')
+        input('finished 1 sample===> pause|')
 
-        # logging.info(f'>>>>>>>>>>>> final result: {output} <<<<<<<<<<<<<')
-        # input()
         return output
 
 class ChainofThought(ZeroCoT):

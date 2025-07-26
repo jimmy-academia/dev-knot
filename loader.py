@@ -1,6 +1,6 @@
 import csv
 import json
-from utils import readf
+from utils import readf, loadj
 
 from debug import *
 
@@ -28,6 +28,32 @@ def get_task_loader(args):
         rows = csv.reader(open(file))
         return [(row[1], row[2], row[3]) for row in rows]
          
+    if args.task == 'healthcare':
+        workflows = loadj("data/healthcare/workflows.json")
+        workflow_dict = {w["workflow_name"]: w["logic_flow"] for w in workflows}
+        
+        query_list = []
+        answer_list = []
+        with open("data/healthcare/triage_benchmark_dataset.csv", "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                query = row["query"]
+                workflow_name = row["workflow"]
+                answer = row["answer"]
+
+                # (Optional) Get the logic flow if needed
+                logic_flow = workflow_dict.get(workflow_name, "")
+
+                # print(query)
+                # print()
+                # print(logic_flow)
+                # print()
+                # print(answer)
+                # input()
+                # Append to lists
+                query_list.append(query + logic_flow)
+                answer_list.append(answer)
+
     # Handle GSM symbolic task
     if args.task == 'gsm_symbolic':
         query_list = []
@@ -50,9 +76,21 @@ def get_task_loader(args):
         dataset = load_from_disk("data/gsm8k/")
         query_list = []
         answer_list = []
+        problem_id = 0
         for i in range(100):
-            query_list.append(dataset['test'][i]['question'])
-            answer_list.append(dataset['test'][i]['answer'].split('#### ')[1])
+            query = ''
+            answer = 0
+            for k in range(int(args.div)):
+                if problem_id in [2]:
+                    problem_id += 1
+                query += f"Problem {k}: {dataset['test'][problem_id]['question']}\n"
+                answer += int(dataset['test'][problem_id]['answer'].split('#### ')[1].replace(",", ""))
+
+                problem_id += 1
+
+            query += "Final Problem: what is the sum of the answers from all of the problems?"
+            query_list.append(query)
+            answer_list.append(answer)
 
         return zip(query_list, answer_list)
          
@@ -62,14 +100,13 @@ def get_task_loader(args):
         next(rows)  # Skip header
         return [(row[1], None) for row in rows]
 
-
-if __name__ == "__main__":
-    # Define the tasks to test (excluding game24 and gsm_symbolic)
-    tasks_to_test = ['keyword', 'arithmetic', 'sorting', 'large_digit', 'intersection']
+def test():
+    tasks_to_test = ['healthcare']
+    # tasks_to_test = ['keyword', 'arithmetic', 'sorting', 'large_digit', 'intersection']
     
     # Define the divisions to test for each task
     divs = {'yelp': '', 'keyword': '1', 'addition': '8', 'arithmetic': '8', 
-            'sorting': '16', 'large_digit': '8', 'intersection': '32'}
+            'sorting': '16', 'large_digit': '8', 'intersection': '32', 'healthcare': ''}
     
     # Create a simple args object
     class Args:
@@ -103,3 +140,6 @@ if __name__ == "__main__":
                 print(f"  Query: {query}")
                 print(f"  Answer: {answer}")
             print()
+
+if __name__ == "__main__":
+    test()

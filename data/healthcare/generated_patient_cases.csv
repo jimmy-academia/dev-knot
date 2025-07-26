@@ -1,0 +1,101 @@
+Workflow,Age,Symptoms,Oxygen Saturation,Fever,Comorbidities,Exposure or Travel History
+Vitals-First with Comorbidity Overlay,1,"fever for 5 days, rash for 5 days, chest pain for 3 days, fatigue for 5 days, loss of smell for 10 days",92%,98.6°F,none,recent travel to outbreak area
+Vitals-First with Comorbidity Overlay,38,"dry cough for 10 days, chest pain for 7 days",88%,98.6°F,"chronic kidney disease, none",close contact with a sick relative
+Vitals-First with Comorbidity Overlay,53,"fatigue for 4 days, headache for 6 days, shortness of breath for 4 days",90%,98.6°F,"hypertension, HIV",recent travel to outbreak area
+Vitals-First with Comorbidity Overlay,50,"loss of smell for 6 days, dry cough for 3 days, shortness of breath for 5 days",88%,101.2°F,asthma,recent travel to outbreak area
+Vitals-First with Comorbidity Overlay,47,"loss of smell for 8 days, dry cough for 8 days, headache for 10 days, nausea for 7 days, fatigue for 5 days",97%,99.5°F,"HIV, COPD",recent travel to outbreak area
+Vitals-First with Comorbidity Overlay,27,"loss of smell for 8 days, shortness of breath for 5 days",88%,101.2°F,none,recent hospital stay
+Vitals-First with Comorbidity Overlay,15,"nausea for 7 days, fever for 2 days, loss of smell for 2 days, shortness of breath for 3 days, diarrhea for 10 days",97%,98.6°F,"hypertension, HIV",recent travel to outbreak area
+Vitals-First with Comorbidity Overlay,26,"shortness of breath for 5 days, diarrhea for 9 days, chest pain for 2 days, fatigue for 4 days",90%,102.0°F,none,recent travel abroad
+Vitals-First with Comorbidity Overlay,56,"headache for 6 days, chest pain for 2 days, fever for 8 days",90%,101.2°F,CHF,recent hospital stay
+Vitals-First with Comorbidity Overlay,76,"shortness of breath for 4 days, fever for 10 days, nausea for 9 days, dry cough for 6 days, headache for 5 days",90%,100.4°F,HIV,recent hospital stay
+Infection-Flag with Social Modifier,63,"diarrhea for 2 days, rash for 9 days, loss of smell for 8 days, headache for 10 days, nausea for 8 days",95%,103.0°F,"hypertension, diabetes",recent travel to outbreak area
+Infection-Flag with Social Modifier,82,"chest pain for 2 days, fever for 5 days, loss of smell for 5 days, fatigue for 3 days, nausea for 9 days",94%,98.6°F,CHF,no known exposure
+Infection-Flag with Social Modifier,69,"fever for 6 days, rash for 1 days, headache for 3 days",98%,99.5°F,chronic kidney disease,no known exposure
+Infection-Flag with Social Modifier,85,"diarrhea for 5 days, headache for 2 days, nausea for 2 days",95%,100.4°F,hypertension,recent hospital stay
+Infection-Flag with Social Modifier,62,"chest pain for 4 days, headache for 3 days, fever for 2 days, shortness of breath for 1 days",98%,100.4°F,"none, HIV",recent travel abroad
+Infection-Flag with Social Modifier,68,"loss of smell for 7 days, dry cough for 3 days, fatigue for 3 days",96%,101.2°F,none,recent travel to outbreak area
+Infection-Flag with Social Modifier,80,"nausea for 6 days, shortness of breath for 9 days, dry cough for 8 days, chest pain for 9 days",96%,99.5°F,chronic kidney disease,close contact with a sick relative
+Infection-Flag with Social Modifier,6,"shortness of breath for 6 days, headache for 3 days",95%,103.0°F,"COPD, CHF",close contact with a sick relative
+Infection-Flag with Social Modifier,81,"chest pain for 2 days, fever for 6 days, nausea for 3 days, dry cough for 6 days",92%,100.4°F,HIV,recent travel to outbreak area
+Infection-Flag with Social Modifier,52,"rash for 7 days, fatigue for 1 days, diarrhea for 1 days, dry cough for 9 days",97%,101.2°F,"chronic kidney disease, HIV",no known exposure
+Symptom Cluster Then Escalation,49,"shortness of breath for 2 days, fatigue for 2 days, loss of smell for 3 days, diarrhea for 3 days, dry cough for 3 days",90%,98.6°F,none,recent travel abroad
+Symptom Cluster Then Escalation,86,"headache for 4 days, fatigue for 1 days",88%,103.0°F,"chronic kidney disease, diabetes",close contact with a sick relative
+Symptom Cluster Then Escalation,37,"diarrhea for 7 days, shortness of breath for 7 days, headache for 10 days, fatigue for 9 days",96%,102.0°F,none,recent hospital stay
+Symptom Cluster Then Escalation,50,"fatigue for 9 days, nausea for 8 days, diarrhea for 2 days",98%,99.5°F,"COPD, hypertension",close contact with a sick relative
+Symptom Cluster Then Escalation,28,"nausea for 1 days, loss of smell for 9 days, fatigue for 4 days, rash for 4 days, headache for 2 days",98%,100.4°F,COPD,no known exposure
+Symptom Cluster Then Escalation,66,"rash for 1 days, diarrhea for 4 days",98%,99.5°F,"asthma, none",recent travel abroad
+Symptom Cluster Then Escalation,31,"chest pain for 2 days, headache for 8 days, rash for 8 days, loss of smell for 5 days, diarrhea for 6 days",92%,98.6°F,none,close contact with a sick relative
+Symptom Cluster Then Escalation,50,"fatigue for 10 days, dry cough for 3 days",96%,103.0°F,hypertension,close contact with a sick relative
+Symptom Cluster Then Escalation,32,"nausea for 2 days, loss of smell for 2 days, fever for 10 days, chest pain for 1 days, dry cough for 3 days",95%,100.4°F,none,recent hospital stay
+Symptom Cluster Then Escalation,18,"rash for 7 days, diarrhea for 5 days",94%,98.6°F,asthma,recent hospital stay
+Exposure-Based Routing,51,"fever for 3 days, fatigue for 2 days, loss of smell for 6 days, shortness of breath for 10 days",98%,98.6°F,"hypertension, HIV",recent travel to outbreak area
+Exposure-Based Routing,32,"diarrhea for 4 days, loss of smell for 9 days",96%,102.0°F,none,no known exposure
+Exposure-Based Routing,85,"dry cough for 2 days, loss of smell for 2 days, chest pain for 2 days, shortness of breath for 3 days, fever for 3 days",96%,102.0°F,none,recent travel abroad
+Exposure-Based Routing,15,"nausea for 8 days, chest pain for 8 days, fatigue for 3 days, rash for 3 days, loss of smell for 1 days",88%,103.0°F,asthma,close contact with a sick relative
+Exposure-Based Routing,70,"headache for 4 days, rash for 3 days, dry cough for 5 days, shortness of breath for 1 days",96%,98.6°F,asthma,recent travel to outbreak area
+Exposure-Based Routing,34,"headache for 5 days, diarrhea for 9 days, shortness of breath for 10 days, dry cough for 4 days, fever for 3 days",98%,100.4°F,none,recent hospital stay
+Exposure-Based Routing,18,"rash for 10 days, chest pain for 2 days, dry cough for 4 days",88%,101.2°F,"diabetes, chronic kidney disease",close contact with a sick relative
+Exposure-Based Routing,39,"loss of smell for 10 days, chest pain for 6 days",90%,100.4°F,hypertension,no known exposure
+Exposure-Based Routing,10,"chest pain for 1 days, diarrhea for 4 days, headache for 4 days, fever for 10 days, nausea for 7 days",95%,99.5°F,COPD,close contact with a sick relative
+Exposure-Based Routing,68,"shortness of breath for 2 days, diarrhea for 1 days",96%,98.6°F,"diabetes, asthma",recent hospital stay
+Elderly-Centered Triage,14,"fever for 3 days, fatigue for 1 days, diarrhea for 7 days, dry cough for 8 days",98%,101.2°F,none,recent travel abroad
+Elderly-Centered Triage,57,"fatigue for 9 days, dry cough for 8 days, shortness of breath for 10 days",96%,98.6°F,none,recent hospital stay
+Elderly-Centered Triage,60,"diarrhea for 9 days, shortness of breath for 1 days, fever for 6 days, loss of smell for 7 days, nausea for 2 days",95%,100.4°F,none,recent hospital stay
+Elderly-Centered Triage,61,"chest pain for 8 days, shortness of breath for 1 days, loss of smell for 1 days, nausea for 5 days",90%,101.2°F,none,recent travel to outbreak area
+Elderly-Centered Triage,26,"fatigue for 8 days, dry cough for 2 days",96%,99.5°F,none,recent travel to outbreak area
+Elderly-Centered Triage,61,"chest pain for 8 days, nausea for 10 days, fatigue for 2 days",95%,100.4°F,none,close contact with a sick relative
+Elderly-Centered Triage,9,"fever for 6 days, dry cough for 6 days, diarrhea for 3 days, loss of smell for 2 days, shortness of breath for 7 days",97%,99.5°F,asthma,no known exposure
+Elderly-Centered Triage,86,"headache for 2 days, loss of smell for 1 days",97%,98.6°F,none,close contact with a sick relative
+Elderly-Centered Triage,50,"diarrhea for 10 days, loss of smell for 1 days, fever for 6 days, dry cough for 6 days",92%,103.0°F,none,close contact with a sick relative
+Elderly-Centered Triage,21,"nausea for 3 days, dry cough for 1 days, fever for 10 days, fatigue for 5 days",95%,100.4°F,none,no known exposure
+Duration-Weighted Symptom Score,23,"nausea for 7 days, fever for 5 days, headache for 5 days, fatigue for 8 days",94%,100.4°F,"COPD, CHF",recent travel to outbreak area
+Duration-Weighted Symptom Score,11,"diarrhea for 10 days, dry cough for 1 days, fatigue for 4 days",90%,99.5°F,CHF,recent travel abroad
+Duration-Weighted Symptom Score,79,"shortness of breath for 9 days, loss of smell for 5 days, dry cough for 4 days, diarrhea for 10 days, fever for 4 days",88%,101.2°F,"diabetes, chronic kidney disease",recent travel to outbreak area
+Duration-Weighted Symptom Score,39,"dry cough for 3 days, fever for 3 days",94%,100.4°F,none,close contact with a sick relative
+Duration-Weighted Symptom Score,36,"rash for 3 days, chest pain for 8 days, headache for 7 days",96%,100.4°F,diabetes,close contact with a sick relative
+Duration-Weighted Symptom Score,9,"diarrhea for 4 days, nausea for 7 days, dry cough for 1 days, headache for 5 days, shortness of breath for 4 days",90%,103.0°F,"asthma, hypertension",close contact with a sick relative
+Duration-Weighted Symptom Score,58,"fever for 5 days, dry cough for 2 days, rash for 6 days, headache for 7 days",97%,103.0°F,"asthma, COPD",recent travel to outbreak area
+Duration-Weighted Symptom Score,5,"loss of smell for 1 days, diarrhea for 6 days",90%,102.0°F,asthma,recent hospital stay
+Duration-Weighted Symptom Score,57,"fever for 2 days, shortness of breath for 9 days, chest pain for 10 days",98%,103.0°F,hypertension,recent hospital stay
+Duration-Weighted Symptom Score,64,"chest pain for 10 days, loss of smell for 3 days, dry cough for 3 days, rash for 10 days",94%,98.6°F,chronic kidney disease,no known exposure
+Immunosuppression Priority Pathway,36,"nausea for 4 days, rash for 6 days, shortness of breath for 6 days",95%,101.2°F,"hypertension, chronic kidney disease",no known exposure
+Immunosuppression Priority Pathway,78,"dry cough for 2 days, diarrhea for 1 days, loss of smell for 2 days, headache for 10 days, chest pain for 6 days",94%,101.2°F,none,close contact with a sick relative
+Immunosuppression Priority Pathway,46,"fever for 8 days, headache for 10 days",90%,101.2°F,none,recent travel abroad
+Immunosuppression Priority Pathway,89,"headache for 5 days, fatigue for 3 days",92%,98.6°F,none,recent travel to outbreak area
+Immunosuppression Priority Pathway,58,"chest pain for 2 days, fatigue for 10 days",95%,100.4°F,COPD,close contact with a sick relative
+Immunosuppression Priority Pathway,41,"shortness of breath for 8 days, chest pain for 8 days, fever for 1 days",97%,98.6°F,hypertension,recent travel abroad
+Immunosuppression Priority Pathway,51,"nausea for 6 days, fatigue for 9 days, rash for 2 days",94%,102.0°F,"diabetes, COPD",recent hospital stay
+Immunosuppression Priority Pathway,61,"fever for 8 days, dry cough for 4 days, nausea for 10 days, chest pain for 8 days",92%,103.0°F,"HIV, hypertension",close contact with a sick relative
+Immunosuppression Priority Pathway,2,"nausea for 7 days, fatigue for 3 days, rash for 4 days",88%,102.0°F,"none, CHF",recent travel to outbreak area
+Immunosuppression Priority Pathway,7,"fever for 2 days, loss of smell for 6 days, diarrhea for 9 days",95%,103.0°F,COPD,no known exposure
+Red Flag Rule Chain,7,"chest pain for 2 days, headache for 10 days, diarrhea for 7 days, nausea for 10 days, fatigue for 9 days",96%,98.6°F,none,close contact with a sick relative
+Red Flag Rule Chain,46,"fatigue for 4 days, diarrhea for 4 days",95%,103.0°F,hypertension,recent hospital stay
+Red Flag Rule Chain,12,"diarrhea for 9 days, nausea for 5 days",96%,99.5°F,diabetes,recent hospital stay
+Red Flag Rule Chain,79,"diarrhea for 1 days, shortness of breath for 2 days, fatigue for 10 days",88%,99.5°F,asthma,close contact with a sick relative
+Red Flag Rule Chain,14,"chest pain for 2 days, rash for 6 days",98%,98.6°F,none,recent hospital stay
+Red Flag Rule Chain,51,"rash for 4 days, diarrhea for 8 days, fatigue for 5 days, dry cough for 10 days",97%,98.6°F,diabetes,recent travel to outbreak area
+Red Flag Rule Chain,40,"chest pain for 10 days, shortness of breath for 5 days, diarrhea for 4 days, headache for 1 days",96%,103.0°F,HIV,recent travel to outbreak area
+Red Flag Rule Chain,2,"fever for 2 days, fatigue for 2 days",94%,101.2°F,none,close contact with a sick relative
+Red Flag Rule Chain,26,"rash for 5 days, dry cough for 4 days",95%,100.4°F,"chronic kidney disease, diabetes",recent travel to outbreak area
+Red Flag Rule Chain,48,"headache for 2 days, chest pain for 8 days, dry cough for 1 days, fever for 3 days",92%,101.2°F,none,recent travel abroad
+Comorbidity-First Heuristic,38,"rash for 8 days, nausea for 10 days, chest pain for 8 days, dry cough for 6 days, loss of smell for 8 days",96%,99.5°F,none,no known exposure
+Comorbidity-First Heuristic,18,"rash for 10 days, shortness of breath for 10 days, nausea for 9 days, fever for 1 days",95%,101.2°F,"HIV, none",no known exposure
+Comorbidity-First Heuristic,21,"rash for 8 days, shortness of breath for 8 days, diarrhea for 3 days, fever for 4 days",92%,100.4°F,"asthma, hypertension",no known exposure
+Comorbidity-First Heuristic,78,"rash for 4 days, loss of smell for 7 days, fatigue for 8 days",94%,100.4°F,CHF,recent travel to outbreak area
+Comorbidity-First Heuristic,30,"chest pain for 6 days, nausea for 7 days, rash for 4 days, headache for 1 days",92%,99.5°F,"HIV, none",no known exposure
+Comorbidity-First Heuristic,19,"loss of smell for 5 days, fatigue for 7 days, shortness of breath for 2 days, fever for 2 days, chest pain for 5 days",92%,100.4°F,"chronic kidney disease, hypertension",recent hospital stay
+Comorbidity-First Heuristic,64,"fever for 2 days, shortness of breath for 9 days",97%,100.4°F,none,no known exposure
+Comorbidity-First Heuristic,49,"headache for 1 days, loss of smell for 8 days, diarrhea for 8 days",90%,98.6°F,"CHF, diabetes",recent hospital stay
+Comorbidity-First Heuristic,23,"fever for 6 days, nausea for 1 days, rash for 9 days, headache for 4 days",95%,99.5°F,"HIV, hypertension",no known exposure
+Comorbidity-First Heuristic,66,"headache for 3 days, nausea for 6 days, dry cough for 2 days, shortness of breath for 4 days, chest pain for 8 days",97%,102.0°F,"HIV, none",recent travel to outbreak area
+Pediatric Guardrail Logic,20,"fever for 5 days, dry cough for 3 days, rash for 7 days, shortness of breath for 1 days",98%,100.4°F,"asthma, HIV",recent travel abroad
+Pediatric Guardrail Logic,34,"headache for 6 days, nausea for 7 days, chest pain for 1 days",88%,100.4°F,none,close contact with a sick relative
+Pediatric Guardrail Logic,51,"loss of smell for 1 days, fatigue for 2 days, nausea for 5 days, shortness of breath for 7 days, rash for 5 days",95%,100.4°F,"hypertension, asthma",close contact with a sick relative
+Pediatric Guardrail Logic,17,"nausea for 7 days, diarrhea for 4 days",94%,101.2°F,none,recent travel abroad
+Pediatric Guardrail Logic,25,"fatigue for 10 days, loss of smell for 1 days, chest pain for 6 days",97%,99.5°F,none,no known exposure
+Pediatric Guardrail Logic,32,"dry cough for 3 days, fatigue for 10 days",98%,100.4°F,none,recent travel abroad
+Pediatric Guardrail Logic,84,"nausea for 6 days, diarrhea for 6 days",98%,101.2°F,"chronic kidney disease, asthma",recent travel abroad
+Pediatric Guardrail Logic,44,"headache for 10 days, dry cough for 9 days, shortness of breath for 1 days",98%,98.6°F,"chronic kidney disease, COPD",recent travel to outbreak area
+Pediatric Guardrail Logic,36,"loss of smell for 10 days, fatigue for 5 days",92%,98.6°F,"asthma, none",no known exposure
+Pediatric Guardrail Logic,38,"headache for 4 days, shortness of breath for 3 days",90%,98.6°F,"diabetes, COPD",recent travel abroad
