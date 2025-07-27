@@ -7,6 +7,14 @@ from .base import BaseScheme
 from tqdm import tqdm
 
 Task_Specific_Concept = {
+    'healthcare': (
+    "You are given a patient case and a rule-based triage workflow. "
+    "Each workflow contains if-else logic conditions that reason over vitals, symptoms, comorbidities, and other risk factors. "
+    "Follow the logic exactly to determine the correct care recommendation. "
+    "Each recommendation must be one of the following: Home care, Outpatient evaluation, Urgent clinical evaluation, ER referral, "
+    "Infectious disease referral, Chest imaging required, or Specialist consult."
+    "Use numerical digits rather than words for all threshold values."
+),
     'gsm8k': "Solve the final problem to find the sum of the answer to each problems. Solve the problems one by one, then add the answers together.",
     'yelp': "Output how many positive reviews in the input. First summarize the reviews step-by-step, than check every review one by one in the input.",
     'keyword': "Output all words about countries in the article. You can seperate article into sentences first. The maximum number of sentences is 20.",
@@ -21,6 +29,24 @@ You can only operate two numbers at a time. Calculate from left to right. Do mul
 }
 
 Task_Specific_Example = {
+    'healthcare': """example for triage workflow reasoning
+(0)=LLM("Extract structured fields from the input. Return a Python dictionary with the following keys: 'oxygen' (int), 'temperature' (float), 'age' (int), 'comorbidities' (list of strings). Input: {(input)}")
+(1)=LLM("Is oxygen saturation less than 92? Based on {(0)}. Output 'yes' or 'no'.")
+(2)=LLM("Is oxygen saturation less than 95? Based on {(0)}. Output 'yes' or 'no'.")
+(3)=LLM("Is temperature greater than 101°F? Based on {(0)}. Output 'yes' or 'no'.")
+(4)=LLM("Let Q1 indicate whether oxygen saturation is less than 92. If Q1 = 'yes', then severity = critical. Given Q1 = {(1)}, does this branch apply? Output only one of: applies, does not apply.")
+(5)=LLM("If oxygen saturation < 95 OR temperature > 101°F, then severity = moderate. This applies only if Q1 is 'no' and (Q2 is 'yes' OR Q3 is 'yes'). Given Q1={(1)}, Q2={(2)}, Q3={(3)}, does this branch apply? Output only one of: applies, does not apply.")
+(6)=LLM("If none of the previous conditions apply, then severity = mild. This applies only if Q1 is 'no', Q2 is 'no', and Q3 is 'no'. Given Q1={(1)}, Q2={(2)}, Q3={(3)}, does this branch apply? Output only one of: applies, does not apply.")
+(7)=LLM("Only one severity level should apply. Severity branch outcomes: - critical: {(4)} - moderate: {(5)} - mild: {(6)} Return the first severity level that applies.")
+(8)=LLM("Is the patient's age greater than or equal to 70? Use {(0)}. Output 'yes' or 'no'.")
+(9)=LLM("{(0)}. Look at the ['comorbidities'] list and count how many items are in it. If the count is greater than or equal to 2, output 'yes'. Otherwise, output 'no'.")
+(10)=LLM("Determine risk level using previous answers: If Q1 is 'yes' OR Q2 is 'yes' → risk = high. Else → risk = standard. Use Q1={(5)}, Q2={(6)}. Output only one of: high, standard.")
+(11)=LLM("Rephrase the decision logic step as follows: If severity is critical → ER referral. Given severity={(7)} and risk={(10)}, Does this branch applies (applies, does not apply)?")
+(12)=LLM("Rephrase the decision logic step as follows: If severity is moderate and risk is high → Urgent clinical evaluation. Given severity={(7)} and risk={(10)}, Does this branch applies (applies, does not apply)?")
+(13)=LLM("Rephrase the decision logic step as follows: If severity is moderate and risk is standard → Outpatient evaluation. Given severity={(7)} and risk={(10)}, does this branch applies (applies, does not apply)?")
+(14)=LLM("Rephrase the decision logic step as follows: If severity is mild → Home care. Given severity={(7)} and risk={(10)}, does this branch applies (applies, does not apply)?")
+(15)=LLM("The result of each branch is: ER referral {(3)}. Urgent clinical evaluation {(4)}. Outpatient evaluation {(5)}. Home care {(6)}. Output the one that is applicable")
+""",
     'gsm8k': """example for length = 2
 (0)=LLM("Split the into a list of separate problems as : ["Problem 1...", "Problem 2...", ..., "Final Problem: what is the sum of the answers from all of the problems?"] \n {(input)}")
 (1)=LLM("{(0)}[0] Let's think step by step.")
@@ -165,17 +191,21 @@ The Input section is the input query. The Context section is the goal we want to
     def solve_query(self, query):
         goal_prompt = f'Input: {query}\nContext: {self.tsp_context}'
         print(goal_prompt)
-        
+        print('_'*50)
+
         knowledge = self.llm_answer(self.knowledge_prompt%goal_prompt, True)
         print(knowledge)
+        print('_'*50)
 
         script_prompt = self.script_prompt%(self.tsp_example, knowledge, goal_prompt)
         script = self.llm_answer(script_prompt, True)
         print(script)
+        print('_'*50)
         # input('pause')
 
         cache = {}
-        for step in tqdm(script.split('\n'), desc="Processing steps", ncols=90):
+        # for step in tqdm(script.split('\n'), desc="Processing steps", ncols=90):
+        for step in script.split('\n'):
             if '=LLM(' not in step:
                 continue
 
@@ -189,51 +219,22 @@ The Input section is the input query. The Context section is the goal we want to
                 print(f"Error during substitution: {e}")
                 check()
 
-            print("<<<<<<")
+            print("<<<<<< input instruction <<<<<<")
             print(instruction)
             output = self.llm_answer(instruction)
-            print(">>>>>>")
+            print(">>>>>> output answer >>>>>>")
             print(output)
-            input()
+            # input()
 
             try:
                 cache[index] = ast.literal_eval(output)
             except:
                 cache[index] = output
 
-        print('answer:', self.ground_truth, output, self.ground_truth == output)
+        iscorrect = self.ground_truth.lower() in output.lower() if self.args.task == 'healthcare' else self.ground_truth == output
+        print('ground_truth:', self.ground_truth, 'answer:', output, iscorrect)
         input('finished 1 sample===> pause|')
         return output
-    
-# def _sub(match, query, cache):
-#     var_name = match.group(1)
-#     index_str = match.group(2)  # This will be None if no index is specified
-    
-#     # Determine the base value based on variable name
-#     if var_name == 'input':
-#         # Handle the input variable specially
-#         import ast
-#         try:
-#             base_value = ast.literal_eval(query)
-#         except (SyntaxError, ValueError):
-#             # If parsing fails, return the raw query
-#             base_value = query
-#     else:
-#         # For all other variables, get from cache
-#         base_value = cache.get(var_name, '')
-    
-#     # Apply indexing if needed and possible
-#     if index_str is not None and isinstance(base_value, (list, tuple)) and base_value:
-#         index = int(index_str)
-#         if 0 <= index < len(base_value):
-#             return base_value[index]
-#         else:
-#             # Index out of range
-#             return ''
-    
-#     # Return the base value if no indexing or indexing not applicable
-#     return base_value
-
 
 def _sub(match, query, cache):
     var_name = match.group(1)

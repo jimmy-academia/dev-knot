@@ -51,8 +51,10 @@ def get_task_loader(args):
                 # print(answer)
                 # input()
                 # Append to lists
-                query_list.append(query + logic_flow)
+                query_list.append(query + '\n rule-based triage workflow:\n' + logic_flow)
                 answer_list.append(answer)
+
+        return zip(query_list, answer_list)
 
     # Handle GSM symbolic task
     if args.task == 'gsm_symbolic':

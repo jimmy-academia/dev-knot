@@ -1,0 +1,42 @@
+[
+  {
+    "workflow_name": "Vitals-First with Comorbidity Overlay",
+    "logic_flow": "If (O₂ saturation < 92 OR systolic BP < 90 OR HR > 130):\n    → severity = critical\nElse If (O₂ < 95 OR Temp > 101°F OR RR > 24):\n    → severity = moderate\nElse:\n    → severity = mild\n\nIf (≥2 chronic conditions OR age ≥ 70):\n    → risk = high\nElse:\n    → risk = standard\n\nIf (severity = critical):\n    → recommend ER referral\nElse If (severity = moderate AND risk = high):\n    → recommend urgent clinical evaluation\nElse If (severity = moderate AND risk = standard):\n    → recommend outpatient evaluation\nElse:\n    → recommend home care"
+  },
+  // {
+  //   "workflow_name": "Infection-Flag with Social Modifier",
+  //   "logic_flow": "If (Temp ≥ 100.4°F OR positive test for contagious disease):\n    → infectious_flag = true\nElse:\n    → infectious_flag = false\n\nIf (household has infants, elderly, or immunocompromised):\n    → social_risk = high\nElse:\n    → social_risk = low\n\nIf (infectious_flag AND social_risk = high):\n    → recommend infectious disease referral\nElse If (infectious_flag):\n    → recommend outpatient evaluation + isolation guidance\nElse:\n    → proceed to general triage (based on symptoms and vitals)"
+  // },
+  {
+    "workflow_name": "Symptom Cluster Then Escalation",
+    "logic_flow": "If (chest pain OR shortness of breath OR confusion):\n    → red_flag = true\nElse If (fever AND cough AND fatigue):\n    → viral_cluster = likely\nElse:\n    → viral_cluster = unlikely\n\nIf (red_flag):\n    → recommend ER referral\nElse If (viral_cluster AND symptoms < 3 days):\n    → recommend home care\nElse If (viral_cluster AND symptoms ≥ 3 days):\n    → recommend outpatient evaluation\nElse:\n    → recommend clinical judgment follow-up"
+  },
+  // {
+  //   "workflow_name": "Exposure-Based Routing",
+  //   "logic_flow": "If (recent travel to outbreak area OR known contact with positive case):\n    → exposure_flag = true\nElse:\n    → exposure_flag = false\n\nIf (Temp ≥ 101.5°F OR sudden symptom onset):\n    → high_suspicion = true\nElse:\n    → high_suspicion = false\n\nIf (exposure_flag AND high_suspicion):\n    → recommend infectious disease referral\nElse If (high_suspicion):\n    → recommend outpatient evaluation\nElse:\n    → recommend home care unless comorbidities present"
+  // },
+  // {
+  //   "workflow_name": "Elderly-Centered Triage",
+  //   "logic_flow": "If (age ≥ 65):\n    → elderly = true\nElse:\n    → elderly = false\n\nIf (falls, confusion, urinary incontinence, or delirium):\n    → geriatric_syndrome = true\nElse:\n    → geriatric_syndrome = false\n\nIf (elderly AND geriatric_syndrome):\n    → recommend urgent clinical evaluation\nElse If (elderly AND ≥2 comorbidities):\n    → recommend outpatient evaluation\nElse:\n    → follow standard triage based on vitals and symptoms"
+  // },
+  {
+    "workflow_name": "Duration-Weighted Symptom Score",
+    "logic_flow": "symptom_score = 0\nIf (cough): +1\nIf (fever): +1\nIf (shortness of breath): +2\nIf (symptom duration > 7 days): +1\n\nIf (symptom_score ≥ 4):\n    → severity = high\nElse If (symptom_score ≥ 2):\n    → severity = moderate\nElse:\n    → severity = low\n\nIf (severity = high):\n    → recommend urgent clinical evaluation\nElse If (severity = moderate):\n    → recommend outpatient evaluation\nElse:\n    → recommend home care"
+  },
+  {
+    "workflow_name": "Immunosuppression Priority Pathway",
+    "logic_flow": "If (on chemotherapy OR HIV+ with CD4 < 200 OR chronic steroid use):\n    → immunosuppressed = true\nElse:\n    → immunosuppressed = false\n\nIf (any sign of infection: fever, chills, or cough):\n    → infection_suspected = true\nElse:\n    → infection_suspected = false\n\nIf (immunosuppressed AND infection_suspected):\n    → recommend urgent clinical evaluation\nElse If (infection_suspected):\n    → recommend outpatient evaluation\nElse:\n    → recommend home care"
+  },
+  // {
+  //   "workflow_name": "Red Flag Rule Chain",
+  //   "logic_flow": "If (loss of consciousness OR seizure OR chest pain with exertion):\n    → recommend ER referral\nElse If (hematemesis OR melena OR severe abdominal pain):\n    → recommend urgent clinical evaluation\nElse If (unexplained weight loss OR lymphadenopathy):\n    → recommend specialist consult\nElse:\n    → proceed to symptom-based evaluation"
+  // },
+  // {
+  //   "workflow_name": "Comorbidity-First Heuristic",
+  //   "logic_flow": "If (diabetes OR COPD OR CHF OR CKD):\n    → comorbidity_score = high\nElse If (only 1 minor chronic condition):\n    → comorbidity_score = medium\nElse:\n    → comorbidity_score = low\n\nIf (Temp ≥ 101°F OR O₂ sat < 94%):\n    → current_status = unstable\nElse:\n    → current_status = stable\n\nIf (comorbidity_score = high AND current_status = unstable):\n    → recommend ER referral\nElse If (comorbidity_score = medium AND current_status = unstable):\n    → recommend urgent clinical evaluation\nElse:\n    → recommend outpatient evaluation or home care based on symptom burden"
+  // },
+  // {
+  //   "workflow_name": "Pediatric Guardrail Logic",
+  //   "logic_flow": "If (age < 12 months):\n    → high_baseline_risk = true\nElse:\n    → high_baseline_risk = false\n\nIf (poor feeding, lethargy, inconsolable crying, or bulging fontanelle):\n    → pediatric_red_flag = true\nElse:\n    → pediatric_red_flag = false\n\nIf (pediatric_red_flag):\n    → recommend ER referral\nElse If (high_baseline_risk AND fever > 100.4°F):\n    → recommend urgent clinical evaluation\nElse:\n    → recommend outpatient pediatric evaluation or home care"
+  // }
+]

@@ -27,6 +27,7 @@ def set_arguments():
 
     # Task, prompt scheme
     parser.add_argument('--scheme', type=str, default='zerocot') 
+    # parser.add_argument('--scheme', type=str, default='knot') 
     # parser.add_argument('--scheme', type=str, default='gknot') 
     # parser.add_argument('--scheme', type=str, default='l2m')
     parser.add_argument('--task', type=str, default='healthcare')
@@ -38,9 +39,10 @@ def set_arguments():
     return args
 
 def main():
-    input('Do healthcare!!! ')
     args = set_arguments()
 
+    # if args.task == 'healthcare':
+        # args.planner_llm = "chatgpt-4o-latest"
     if args.scheme == 'rknot':
         args.planner_llm = "o1-mini"
         args.worker_llm = "chatgpt-4o-latest"

@@ -5,6 +5,7 @@ from collections import Counter
 
 
 ContextPrompts = {
+    'healthcare': 'We want to determine the correct treatment based on the workflow.',
     'keyword': 'We are extracting every occurrence of country names, preserving duplicates and maintaining their original order in the paragraph: ',
     'yelp': 'We are counting the number of positive reviews from the review list: ',
     'addition': 'We are calculating the arithmetic result of input sequence: ',
@@ -230,6 +231,8 @@ class ZeroCoT(BaseScheme):
             final_output = self.llm_answer(f"format the answer {output} in a one-line list (square brackets) without quotes. example: [Country, Country, Country, ..., Country]")
         elif self.args.task == 'yelp':
             final_output = self.llm_answer(f"Based on the {output}, output the number of positive reviews. Output only an integer.")
+        elif self.args.task == 'healthcare':
+            final_output = self.llm_answer(f"Based on the {output}, output the final answer for the correct treatment.")
         else:
             final_output = self.llm_answer("extract the numerical of the answer:"+output)
 
