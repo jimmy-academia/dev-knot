@@ -210,8 +210,63 @@ Input: {query}
 Let's think step by step. 
 
 Output:
-"""
+""",
+    'healthcare': """Input: A 71-year-old male with COPD and diabetes presents with fever (101.2°F) for 3 days, dry cough for 3 days, and fatigue for 4 days. O2 saturation is 96%.
 
+Let's think step by step
+
+Output:
+Symptoms: fever (3), dry cough (3), fatigue (4)
+Vitals: O2 sat 96%, Temp 101.2°F
+Check red flag symptoms → chest pain ❌, shortness of breath ❌, confusion ❌
+→ red\_flag = false
+Check viral cluster: fever ✅, cough ✅, fatigue ✅
+→ viral\_cluster = likely
+All symptoms ≥ 3 days → duration = 3+
+→ Recommend: outpatient evaluation
+
+Final answer: Outpatient evaluation
+
+---
+
+Input: A 45-year-old woman presents with fever (102°F), dry cough, and fatigue, all starting this morning. No known comorbidities. O2 saturation 98%.
+
+Let's think step by step
+
+Output:
+Symptoms: fever (0), dry cough (0), fatigue (0)
+Vitals: O2 sat 98%, Temp 102°F
+Check red flag symptoms → chest pain ❌, shortness of breath ❌, confusion ❌
+→ red\_flag = false
+Check viral cluster: fever ✅, cough ✅, fatigue ✅
+→ viral\_cluster = likely
+All symptoms < 3 days → duration = 0
+→ Recommend: home care
+
+Final answer: Home care
+
+---
+
+Input: A 67-year-old male presents with chest pain and shortness of breath. History of hypertension. O2 saturation 92%.
+
+Let's think step by step
+
+Output:
+Symptoms: chest pain ✅, shortness of breath ✅
+Vitals: O2 sat 92%
+Check red flag symptoms → chest pain ✅, shortness of breath ✅
+→ red\_flag = true
+→ Recommend: ER referral
+
+Final answer: ER referral
+
+Input: {query}
+
+Let's think step by step. 
+
+Output:
+"""
+    
 
 
 }
@@ -236,6 +291,9 @@ class ZeroCoT(BaseScheme):
         else:
             final_output = self.llm_answer("extract the numerical of the answer:"+output)
 
+
+        logging.info(f'>>>>>>>>>>>> final result: {output} vs ground truth: {self.ground_truth} <<<<<<<<<<<<<')
+        input('finished 1 sample===> pause|')
         return final_output
 
     def solve_query(self, query):
@@ -246,11 +304,7 @@ class ZeroCoT(BaseScheme):
         print(output)
         print()
         print()
-        input('pause')
         output = self.extract_answer(output)
-        logging.info(f'>>>>>>>>>>>> final result: {output} vs ground truth: {self.ground_truth} <<<<<<<<<<<<<')
-        input('finished 1 sample===> pause|')
-
         return output
 
 class ChainofThought(ZeroCoT):
@@ -260,7 +314,13 @@ class ChainofThought(ZeroCoT):
         self.cot_example = Task_Specific_Example.get(self.args.task)
 
     def solve_query_once(self, query):
+        print(query)
         output = self.llm_answer(self.context + self.cot_example.format(query=query))
+        print()
+        print()
+        print(output)
+        print()
+        print()
         output = self.extract_answer(output)
 
         # logging.info(f'>>>>>>>>>>>> final result: {output} <<<<<<<<<<<<<')

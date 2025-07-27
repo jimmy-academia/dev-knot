@@ -26,8 +26,8 @@ def set_arguments():
     parser.add_argument('--ckpt', type=str, default='ckpt')
 
     # Task, prompt scheme
-    parser.add_argument('--scheme', type=str, default='zerocot') 
-    # parser.add_argument('--scheme', type=str, default='knot') 
+    # parser.add_argument('--scheme', type=str, default='zerocot') 
+    parser.add_argument('--scheme', type=str, default='knot') 
     # parser.add_argument('--scheme', type=str, default='gknot') 
     # parser.add_argument('--scheme', type=str, default='l2m')
     parser.add_argument('--task', type=str, default='healthcare')

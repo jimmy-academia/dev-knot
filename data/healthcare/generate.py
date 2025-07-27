@@ -1,3 +1,6 @@
+# "A 90-year-old patient presents with chest pain for 9 days, headache for 5 days, rash for 10 days, fatigue for 3 days, diarrhea for 10 days. Oxygen saturation is 96%, and body temperature is 100.4°F. Medical history includes asthma. Recent hospital stay.",Vitals-First with Comorbidity Overlay,Home care
+# "A 34-year-old patient presents with dry cough for 1 days, rash for 2 days, diarrhea for 1 days, fatigue for 2 days. Oxygen saturation is 97%, and body temperature is 98.6°F. Medical history includes CHF, asthma. Recent hospital stay.",Symptom Cluster Then Escalation,Clinical judgment follow-up
+
 import csv
 import random
 
@@ -20,12 +23,13 @@ exposures_pool = [
 ]
 workflow_names = [
     "Vitals-First with Comorbidity Overlay",
-    # "Infection-Flag with Social Modifier",
     "Symptom Cluster Then Escalation",
+    # "Duration-Weighted Symptom Score",
+    # "Immunosuppression Priority Pathway",
+    # ===
+    # "Infection-Flag with Social Modifier",
     # "Exposure-Based Routing",
     # "Elderly-Centered Triage",
-    "Duration-Weighted Symptom Score",
-    "Immunosuppression Priority Pathway",
     # "Red Flag Rule Chain",
     # "Comorbidity-First Heuristic",
     # "Pediatric Guardrail Logic"
@@ -83,13 +87,24 @@ def eval_infection_social(row):
     else: return "Home care"
 
 def eval_symptom_cluster(row):
-    symptoms = row['Symptoms']
-    if any(flag in symptoms for flag in ["chest pain", "shortness of breath", "confusion"]): return "ER referral"
-    cluster = all(s in symptoms for s in ["fever", "cough", "fatigue"])
-    days = max(int(word) for word in symptoms.split() if word.isdigit())
-    if cluster and days >= 3: return "Outpatient evaluation"
-    elif cluster: return "Home care"
-    else: return "Outpatient evaluation"
+    symptoms = row['Symptoms'].lower()
+    # Rule 1: Check for red flag symptoms
+    red_flags = ["chest pain", "shortness of breath", "confusion"]
+    if any(flag in symptoms for flag in red_flags):
+        return "ER referral"
+    # Rule 2: Check for viral cluster (fever + cough + fatigue)
+    has_cluster = all(term in symptoms for term in ["fever", "cough", "fatigue"])
+    # Extract symptom durations (e.g., "2 days", "1 days")
+    durations = [int(word) for word in symptoms.split() if word.isdigit()]
+    max_days = max(durations) if durations else 0
+    # Rule 3: Decide based on cluster and duration
+    if has_cluster and max_days >= 3:
+        return "Outpatient evaluation"
+    elif has_cluster:
+        return "Home care"
+    else:
+        return "Clinical judgment follow-up"
+
 
 def eval_exposure_routing(row):
     _, fever = parse_vitals(row)
