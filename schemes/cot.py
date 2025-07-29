@@ -293,7 +293,7 @@ class ZeroCoT(BaseScheme):
 
 
         logging.info(f'>>>>>>>>>>>> final result: {output} vs ground truth: {self.ground_truth} <<<<<<<<<<<<<')
-        input('finished 1 sample===> pause|')
+        # input('finished 1 sample===> pause|')
         return final_output
 
     def solve_query(self, query):

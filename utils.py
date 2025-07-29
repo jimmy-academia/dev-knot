@@ -4,6 +4,8 @@ import json
 import argparse
 import random
 import logging
+import statistics
+
 
 user_struct = lambda x: {"role": "user", "content": x}
 system_struct = lambda x: {"role": "system", "content": x}
@@ -55,5 +57,6 @@ def readf(path):
     with open(path, 'r') as f:
         return f.read()
 
-
+def worst_meanstd(_list):
+    return max(_list), statistics.mean(_list), statistics.stdev(_list)
 

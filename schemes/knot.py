@@ -2,6 +2,7 @@ import re
 import ast
 from functools import partial
 
+import time
 import logging
 from .base import BaseScheme
 from tqdm import tqdm
@@ -11,9 +12,9 @@ Task_Specific_Concept = {
     "You are given a patient case and a rule-based triage workflow. "
     "Each workflow contains if-else logic conditions that reason over vitals, symptoms, comorbidities, and other risk factors. "
     "Follow the logic exactly to determine the correct care recommendation. "
-    "Each recommendation must be one of the following: Home care, Outpatient evaluation, Urgent clinical evaluation, ER referral, "
-    "Infectious disease referral, Chest imaging required, or Specialist consult."
-    "Use numerical digits rather than words for all threshold values."
+    "Each recommendation must be one of the following: Home care, Outpatient evaluation, Urgent clinical evaluation, ER referral. "
+    "Use numerical digits rather than words for all threshold values. "
+    "Follow the example to break down the conditional if else into sepearate branches"
 ),
     'gsm8k': "Solve the final problem to find the sum of the answer to each problems. Solve the problems one by one, then add the answers together.",
     'yelp': "Output how many positive reviews in the input. First summarize the reviews step-by-step, than check every review one by one in the input.",
@@ -26,6 +27,9 @@ You can only operate two numbers at a time. Calculate from left to right. Do mul
     'add_mul': """Perform the arithmetic result of input. 
 You can only operate two numbers at a time. Calculate from left to right. Do multiplication and division first.""",    
     'addition': "Perform the arithmetic result of input. You can only operate two numbers at a time.",
+    'addition2': "Perform the arithmetic result of input. Do not add numbers 1-by-1, add it 2-by-2. You must add two numbers from the list to the tally at each step.",
+    'addition3': "Perform the arithmetic result of input. Do not add numbers 1-by-1, add it 3-by-3. You must add three numbers from the list to the tally at each step.",
+    'addition4': "Perform the arithmetic result of input. You must process four numbers at a time.",
 }
 
 Task_Specific_Example = {
@@ -40,7 +44,7 @@ Task_Specific_Example = {
 (7)=LLM("Only one severity level should apply. Severity branch outcomes: - critical: {(4)} - moderate: {(5)} - mild: {(6)} Return the first severity level that applies.")
 (8)=LLM("Is the patient's age greater than or equal to 70? Use {(0)}. Output 'yes' or 'no'.")
 (9)=LLM("{(0)}. Look at the ['comorbidities'] list and count how many items are in it. If the count is greater than or equal to 2, output 'yes'. Otherwise, output 'no'.")
-(10)=LLM("Determine risk level using previous answers: If Q1 is 'yes' OR Q2 is 'yes' → risk = high. Else → risk = standard. Use Q1={(5)}, Q2={(6)}. Output only one of: high, standard.")
+(10)=LLM("Determine risk level using previous answers: If Q1 is 'yes' OR Q2 is 'yes' → risk = high. Else → risk = standard. Use Q1={(8)}, Q2={(9)}. Output only one of: high, standard.")
 (11)=LLM("Rephrase the decision logic step as follows: If severity is critical → ER referral. Given severity={(7)} and risk={(10)}, Does this branch applies (applies, does not apply)?")
 (12)=LLM("Rephrase the decision logic step as follows: If severity is moderate and risk is high → Urgent clinical evaluation. Given severity={(7)} and risk={(10)}, Does this branch applies (applies, does not apply)?")
 (13)=LLM("Rephrase the decision logic step as follows: If severity is moderate and risk is standard → Outpatient evaluation. Given severity={(7)} and risk={(10)}, does this branch applies (applies, does not apply)?")
@@ -120,6 +124,19 @@ Output a Python list where each review is a string element, preserving the [REVI
 (0)=LLM("Split the sequence {(input)} into a list of numbers. Output a list")
 (1)=LLM("Add {(0)}[0] and {(0)}[1]. Only output number.")
 (2)=LLM("Add {(1)} and {(0)}[2]. Only output number.")""",
+    'addition2': """example for length = 8 (Script do not contain this line.)
+(0)=LLM("Split the sequence {(input)} into a list of numbers. Output a list")
+(1)=LLM("Add {(0)}[0], {(0)}[1], {(0)}[2], {(0)}[3]. Only output number.")
+(2)=LLM("Add {(1)} and {(0)}[4] and {(0)}[5]. Only output number.")
+(3)=LLM("Add {(2)} and {(0)}[6] and {(0)}[7]. Only output number.")""",
+    'addition3': """example for length = 9 (Script do not contain this line.)
+(0)=LLM("Split the sequence {(input)} into a list of numbers. Output a list")
+(1)=LLM("Add {(0)}[0], {(0)}[1], {(0)}[2], {(0)}[3], {(0)}[4], {(0)}[5]. Only output number.")
+(2)=LLM("Add {(1)} and {(0)}[6], {(0)}[7], {(0)}[8]. Only output number.")""",
+    'addition4': """example for length = 12 (Script do not contain this line.)
+(0)=LLM("Split the sequence {(input)} into a list of numbers. Output a list")
+(1)=LLM("Add {(0)}[0], {(0)}[1], {(0)}[2], {(0)}[3], {(0)}[4], {(0)}[5], {(0)}[6], {(0)}[7]. Only output number.")
+(2)=LLM("Add {(1)} and {(0)}[8], {(0)}[9], {(0)}[10], {(0)}[12]. Only output number.")""",
     'arithmetic': """
 ```example for some basic operation
 (0)=LLM("Given {(input)}, Split the numbers without operators. Only output list.")
@@ -141,6 +158,40 @@ Output a Python list where each review is a string element, preserving the [REVI
 (2*length)=LLM("Calculate {(2*length-1)} divide 10, Only output integer.")
 (2*length+1)=LLM("Convert into an integer: {(2*length)}{(2*length-1)}[-1]{(2*length-3)}[-1]{(2*length-5)}[-1]......{(25)}[-1]{(23)}[-1]{(21)}[-1]{(19)}[-1]{(17)}[-1]{(15)}[-1]{(13)}[-1]{(11)}[-1]{(9)}[-1]{(7)}[-1]{(5)}[-1]{(3)}[-1]{(1)}[-1]")""",
 }
+
+def _sub(match, query, cache):
+    var_name = match.group(1)
+    index_str = match.group(2)  # This will be None if no index is specified
+    
+    # Determine the base value based on variable name
+    if var_name == 'input':
+        # Handle the input variable specially
+        import ast
+        try:
+            base_value = ast.literal_eval(query)
+        except (SyntaxError, ValueError):
+            # If parsing fails, return the raw query
+            base_value = query
+    else:
+        # For all other variables, get from cache
+        base_value = cache.get(var_name, '')
+    
+    # Apply indexing if needed and possible
+    if index_str is not None and isinstance(base_value, (list, tuple)) and base_value:
+        index = int(index_str)
+        if 0 <= index < len(base_value):
+            return str(base_value[index])
+        else:
+            # Index out of range
+            return ''
+    
+    # Ensure we return a string, even for list types
+    if isinstance(base_value, (list, tuple)):
+        import json
+        return json.dumps(base_value)
+    
+    # Return the base value as a string
+    return str(base_value)
 
 class kNetworkofThought(BaseScheme):
     
@@ -204,8 +255,9 @@ The Input section is the input query. The Context section is the goal we want to
         # input('pause')
 
         cache = {}
-        # for step in tqdm(script.split('\n'), desc="Processing steps", ncols=90):
-        for step in script.split('\n'):
+        perstep = []
+        for step in tqdm(script.split('\n'), desc="Processing steps", ncols=90):
+        # for step in script.split('\n'):
             if '=LLM(' not in step:
                 continue
 
@@ -219,11 +271,14 @@ The Input section is the input query. The Context section is the goal we want to
                 print(f"Error during substitution: {e}")
                 check()
 
-            print("<<<<<< input instruction <<<<<<")
-            print(instruction)
+            # print("<<<<<< input instruction <<<<<<")
+            # print(instruction)
+            start = time.time()
             output = self.llm_answer(instruction)
-            print(">>>>>> output answer >>>>>>")
-            print(output)
+            duration = time.time() - start
+            perstep.append(duration)
+            # print(">>>>>> output answer >>>>>>")
+            # print(output)
             # input()
 
             try:
@@ -232,40 +287,11 @@ The Input section is the input query. The Context section is the goal we want to
                 cache[index] = output
 
         iscorrect = self.ground_truth.lower() in output.lower() if self.args.task == 'healthcare' else self.ground_truth == output
+
+        self.perstep_runtimes.extend(perstep)
+        self.total_runtimes.append(sum(perstep))
+
         print('ground_truth:', self.ground_truth, 'answer:', output, iscorrect)
         input('finished 1 sample===> pause|')
         return output
 
-def _sub(match, query, cache):
-    var_name = match.group(1)
-    index_str = match.group(2)  # This will be None if no index is specified
-    
-    # Determine the base value based on variable name
-    if var_name == 'input':
-        # Handle the input variable specially
-        import ast
-        try:
-            base_value = ast.literal_eval(query)
-        except (SyntaxError, ValueError):
-            # If parsing fails, return the raw query
-            base_value = query
-    else:
-        # For all other variables, get from cache
-        base_value = cache.get(var_name, '')
-    
-    # Apply indexing if needed and possible
-    if index_str is not None and isinstance(base_value, (list, tuple)) and base_value:
-        index = int(index_str)
-        if 0 <= index < len(base_value):
-            return str(base_value[index])
-        else:
-            # Index out of range
-            return ''
-    
-    # Ensure we return a string, even for list types
-    if isinstance(base_value, (list, tuple)):
-        import json
-        return json.dumps(base_value)
-    
-    # Return the base value as a string
-    return str(base_value)

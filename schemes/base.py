@@ -1,7 +1,7 @@
 import openai
 import logging
 from collections import defaultdict
-from utils import readf, user_struct, system_struct, dumpj
+from utils import readf, user_struct, system_struct, dumpj, worst_meanstd
 
 from tqdm import tqdm
 from debug import check
@@ -13,6 +13,9 @@ class BaseScheme(object):
         self.task_loader = task_loader
         self.check_openai_api()
         self.system_servent = None
+
+        self.total_runtimes = []
+        self.perstep_runtimes = []
 
     def check_openai_api(self):
         self.client = openai.OpenAI(api_key=readf('.openaiapi_key'))
@@ -81,7 +84,9 @@ class BaseScheme(object):
             results['query'].append(query)
             results['output'].append(output)
             results['answer'].append(answer)
-            correct += int(output == answer)
+            iscorrect = self.ground_truth.lower() in output.lower() if self.args.task == 'healthcare' else self.ground_truth == output
+            correct += int(iscorrect)
+            
             total += 1
             results['accuracy'] = correct/total
             loader_bar.set_postfix(acc=correct/total)
@@ -89,9 +94,16 @@ class BaseScheme(object):
             # print(output, answer)
             # return True
 
+            if total == 5:
+                break
 
             # check()
 
+        perstep_worst, perstep_mean, perstep_std = worst_meanstd(self.perstep_runtimes)
+        total_worst, total_mean, total_std = worst_meanstd(self.total_runtimes)
+        print(f'{perstep_worst:.2f}, {perstep_mean:.2f}± {perstep_std:.2f}')
+        print(f'{total_worst:.2f}, {total_mean:.2f}± {total_std:.2f}')
+        input('pause')
 
         results['info'] = f"Correct: {correct}/Total: {total}"
         dumpj(results, self.args.record_path)
