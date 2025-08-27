@@ -1,0 +1,24 @@
+<Instruction>
+Add the following two integers and **output exactly one line containing the sum**,
+for example:
+8
+</Instruction>
+
+<Examples>
+Add the following two numbers:
+3
+5
+
+Let's think step by step.
+1. Take the first number: 3
+2. Take the second number: 5
+3. Sum them: 8
+
+Output: 8
+</Examples>
+
+Add the following two numbers:
+{input_list1}
+{input_list2}
+
+Let's think step by step.

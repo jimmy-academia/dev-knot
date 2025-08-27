@@ -1,0 +1,33 @@
+<Instruction> Carefully extract all country names (no continents) that appear in the following text, preserving duplicates and maintaining their original order.  
+Output the result as a list format, e.g.
+[Norway, Sweden, Norway, Canada, United States]
+</Instruction>
+
+<Approach>
+To extract all country names (including duplicates), follow these steps:
+1. Read through the input passage carefully.  
+2. Identify every country name exactly as spelled, preserving duplicates.  
+3. Output all country names in a single list maintaining their original order.
+</Approach>
+
+<Examples>
+Input:
+Alexandra boarded the first flight of her grand journey, starting from Canada. With a globe-trotting itinerary in hand, she was filled with excitement. Her first stop was Mexico, where she marveled at the Mayan ruins. From there, she explored the rainforests of Brazil and danced the tango in Argentina.
+Output:
+[Canada, Mexico, Brazil, Argentina]
+
+Input:
+The adventure led him to the peaks of Peru where he trekked to see the mysteries of Machu Picchu. He then headed to Chile to gaze at the vastness of the Atacama Desert. A quick detour to Uruguay and Paraguay allowed him to experience the vibrancy of the local cultures before returning back to Canada through Peru, Brazil and Mexico.
+Output:
+[Peru, Chile, Uruguay, Paraguay, Canada, Peru, Brazil, Mexico]
+
+Input:
+Journeying westward, she admired the art in Italy and sipped coffee in France. The music of Spain and the history of Greece deepened her love for Europe. The Nordic beauty of Norway, Sweden, Finland, and Denmark took her breath away. She danced in Ireland, explored castles in Scotland, and marveled at the architecture in Germany and Russia. Italy, Norway, Sweden and Germany will always stay her favourite destinations to visit.
+Output:
+[Italy, France, Spain, Greece, Norway, Sweden, Finland, Denmark, Ireland, Scotland, Germany, Russia, Italy, Norway, Sweden, Germany]
+</Examples>
+
+Input:
+{input}
+
+Let's think step by step.

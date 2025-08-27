@@ -255,9 +255,7 @@ The Input section is the input query. The Context section is the goal we want to
         # input('pause')
 
         cache = {}
-        perstep = []
         for step in tqdm(script.split('\n'), desc="Processing steps", ncols=90):
-        # for step in script.split('\n'):
             if '=LLM(' not in step:
                 continue
 
@@ -271,15 +269,11 @@ The Input section is the input query. The Context section is the goal we want to
                 print(f"Error during substitution: {e}")
                 check()
 
-            # print("<<<<<< input instruction <<<<<<")
-            # print(instruction)
-            start = time.time()
+            # Record step time using the new method
+            start_time = time.time()
             output = self.llm_answer(instruction)
-            duration = time.time() - start
-            perstep.append(duration)
-            # print(">>>>>> output answer >>>>>>")
-            # print(output)
-            # input()
+            duration = time.time() - start_time
+            self.perstep_runtimes.append(duration)
 
             try:
                 cache[index] = ast.literal_eval(output)
@@ -287,9 +281,6 @@ The Input section is the input query. The Context section is the goal we want to
                 cache[index] = output
 
         iscorrect = self.ground_truth.lower() in output.lower() if self.args.task == 'healthcare' else self.ground_truth == output
-
-        self.perstep_runtimes.extend(perstep)
-        self.total_runtimes.append(sum(perstep))
 
         print('ground_truth:', self.ground_truth, 'answer:', output, iscorrect)
         input('finished 1 sample===> pause|')

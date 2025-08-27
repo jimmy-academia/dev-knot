@@ -1,5 +1,6 @@
 import openai
 import logging
+import time
 from collections import defaultdict
 from utils import readf, user_struct, system_struct, dumpj, worst_meanstd
 
@@ -76,34 +77,68 @@ class BaseScheme(object):
         correct = total = 0
 
         loader_bar = tqdm(self.task_loader, ncols=88, desc=f"[{self.args.scheme}]", total=100)
-        for query, answer in loader_bar:
-            self.ground_truth = answer
-            
-            output = self.solve_query(query)
-            # logging.info(f'=> output: {output} vs answer {answer} <<<')
-            results['query'].append(query)
-            results['output'].append(output)
-            results['answer'].append(answer)
-            iscorrect = self.ground_truth.lower() in output.lower() if self.args.task == 'healthcare' else self.ground_truth == output
-            correct += int(iscorrect)
-            
-            total += 1
-            results['accuracy'] = correct/total
-            loader_bar.set_postfix(acc=correct/total)
-            # dumpj(results, self.args.record_path)
-            # print(output, answer)
-            # return True
+        if self.args.task in ['yelp', 'keyword', 'addition', 'arithmetic', 'sorting', 'large_digit']:
+            for query, answer in loader_bar:
+                self.ground_truth = answer
+                
+                # Record total runtime
+                start_time = time.time()
+                output = self.solve_query(query)
+                end_time = time.time()
+                self.total_runtimes.append(end_time - start_time)
+                
+                results['query'].append(query)
+                results['output'].append(output)
+                results['answer'].append(answer)
+                iscorrect = self.ground_truth.lower() in output.lower() if self.args.task == 'healthcare' else self.ground_truth == output
+                correct += int(iscorrect)
+                
+                total += 1
+                results['accuracy'] = correct/total
+                loader_bar.set_postfix(acc=correct/total)
+                # dumpj(results, self.args.record_path)
+                # print(output, answer)
+                # return True
 
-            if total == 5:
-                break
+                if total == 3:
+                    break
 
-            # check()
+        elif self.args.task == "intersection":
+            for set_1, set_2, answer in loader_bar:
+                if len(set_1) < len(set_2):
+                    set_1, set_2 = set_2, set_1
+                # 創建符合knot.py格式的query結構
+                query = {"Set1": set_1, "Set2": set_2}
+                
+                self.ground_truth = answer
+                
+                # Record total runtime
+                start_time = time.time()
+                output = self.solve_query(query)
+                end_time = time.time()
+                self.total_runtimes.append(end_time - start_time)
+                
+                results['query'].append(query)
+                results['output'].append(output)
+                results['answer'].append(answer)
+                correct += int(output == answer)
+                total += 1
+                results['accuracy'] = correct/total
+                loader_bar.set_postfix(acc=correct/total)
+                # dumpj(results, self.args.record_path)
+                # print(output, answer)
+                # return True 
 
-        perstep_worst, perstep_mean, perstep_std = worst_meanstd(self.perstep_runtimes)
-        total_worst, total_mean, total_std = worst_meanstd(self.total_runtimes)
-        print(f'{perstep_worst:.2f}, {perstep_mean:.2f}± {perstep_std:.2f}')
-        print(f'{total_worst:.2f}, {total_mean:.2f}± {total_std:.2f}')
-        input('pause')
+                if total == 3:
+                    break
+
+                # check()
+
+        if self.perstep_runtimes and self.total_runtimes:
+            perstep_worst, perstep_mean, perstep_std = worst_meanstd(self.perstep_runtimes)
+            total_worst, total_mean, total_std = worst_meanstd(self.total_runtimes)
+            print(f'- Perstep worst: {perstep_worst:.2f}, mean: {perstep_mean:.2f}± {perstep_std:.2f}')
+            print(f'- Total   worst: {total_worst:.2f}, mean: {total_mean:.2f}± {total_std:.2f}')
 
         results['info'] = f"Correct: {correct}/Total: {total}"
         dumpj(results, self.args.record_path)

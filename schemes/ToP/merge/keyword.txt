@@ -1,0 +1,32 @@
+<Instruction>
+Combine the following two lists of country names into a single list, preserving all duplicates and maintaining the original order.
+**Output exactly one line containing the combined list in the format:**
+[country1, country2, country3, ...]
+</Instruction>
+
+<Examples>
+List 1: [Canada, Mexico, Brazil]
+List 2: [Argentina, Chile, Peru]
+
+Let's think step by step.
+1. Take all countries from List 1: Canada, Mexico, Brazil
+2. Take all countries from List 2: Argentina, Chile, Peru
+3. Combine them in order: Canada, Mexico, Brazil, Argentina, Chile, Peru
+
+Output: [Canada, Mexico, Brazil, Argentina, Chile, Peru]
+
+List 1: [Italy, France, Spain, Greece]
+List 2: [Norway, Sweden, Italy, Germany]
+
+Let's think step by step.
+1. Take all countries from List 1: Italy, France, Spain, Greece
+2. Take all countries from List 2: Norway, Sweden, Italy, Germany
+3. Combine them in order (note Italy appears twice): Italy, France, Spain, Greece, Norway, Sweden, Italy, Germany
+
+Output: [Italy, France, Spain, Greece, Norway, Sweden, Italy, Germany]
+</Examples>
+
+List 1: {input_list1}
+List 2: {input_list2}
+
+Let's think step by step.
