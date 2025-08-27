@@ -125,12 +125,10 @@ class TreeOfProblems(BaseScheme):
         solved_lines = []
         for idx, sub in enumerate(sub_list, start=1):
             if self.args.task == "intersection":
-                # 處理新的字典格式
+                # Pass Set2 for intersection task
                 if isinstance(query, dict):
                     set2 = query["Set2"]
-                else:
-                    # 向後兼容舊格式
-                    set1, set2 = query.split(" + ")
+
                 ans = self._solve(sub, set2=set2)
             else:
                 ans = self._solve(sub)

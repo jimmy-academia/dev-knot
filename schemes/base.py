@@ -107,7 +107,7 @@ class BaseScheme(object):
             for set_1, set_2, answer in loader_bar:
                 if len(set_1) < len(set_2):
                     set_1, set_2 = set_2, set_1
-                # 創建符合knot.py格式的query結構
+                # synsize query in dict format
                 query = {"Set1": set_1, "Set2": set_2}
                 
                 self.ground_truth = answer
