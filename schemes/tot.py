@@ -14,24 +14,20 @@ import graph_of_thoughts as got
 try:
     arith_8 = importlib.import_module('graph-of-thoughts.examples.arithmetic.arith_8')
     digit_8 = importlib.import_module('graph-of-thoughts.examples.large_digit.digit_8')
-    GRAPH_OF_THOUGHTS_AVAILABLE = True
+    TREE_OF_THOUGHTS_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Could not import graph-of-thoughts modules: {e}")
-    GRAPH_OF_THOUGHTS_AVAILABLE = False
+    TREE_OF_THOUGHTS_AVAILABLE = False
 
-class GraphofThought(BaseScheme):
-
+class TreeofThought(BaseScheme):
+    
     def prep_const_prompt(self):
         self.system_servent = "You follow orders strictly. Output the answer without any additional information."
 
     def prep_task_spcefics(self):
-        example = """Input: [REVIEW_1] A menu that satisfies everyone's cravings! Clean, trendy, and delicious! I definitely recommend going early (before 9 am) as the wait tends to get longer after 9 am! But honestly, it is soooo worth the wait. You will leave there feeling so incredible satisfied! [REVIEW_2] I am a long term frequent customer of this establishment. I just went in to order take out (3 apps) and was told they're too busy to do it. Really? The place is maybe half full at best. Does your dick reach your ass? Yes? Go fuck yourself! I'm a frequent customer AND great tipper. Glad that Kanella just opened. NEVER going back to dmitris! Output: 1 Input: [REVIEW_1] The pasta was amazing and the service was excellent! [REVIEW_2] The food was great but the service was terrible. [REVIEW_3] I love this place and will definitely come back. Output: 2"""
+        example = """"""
 
-        self.script = """(0)=LLM("Split the following batch of review into two: {(input)}. Output an array.")
-(1)=LLM("Count how many review in the following batch is Positive: """+example+""" Input {(0)}[0] Output:")
-(2)=LLM("Count how many review in the following batch is Positive: """+example+""" Input {(0)}[0] Output:")
-(3)=LLM("Combine the two integer counts into a single integer by adding them together. Output only the integer sum. Counts: {(1)} {(2)}. Output")
-"""
+        self.script = """"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -43,16 +39,16 @@ class GraphofThought(BaseScheme):
         task = getattr(self.args, 'task', 'arithmetic')
         
         # Try Graph of Thoughts first
-        if GRAPH_OF_THOUGHTS_AVAILABLE:
+        if TREE_OF_THOUGHTS_AVAILABLE:
             try:
                 if task == 'arithmetic':
-                    result = self._run_arithmetic_got(query)
+                    result = self._run_arithmetic_tot(query)
                 elif task == 'large_digit':
-                    result = self._run_large_digit_got(query)
+                    result = self._run_large_digit_tot(query)
             except Exception as e:
-                print(f"GoT failed: {e}")
+                print(f"ToT failed: {e}")
         else:
-            raise Exception("Graph of Thoughts not available")
+            raise Exception("Tree of Thoughts not available")
 
         # Record total runtime
         end_time = time.time()
@@ -74,8 +70,8 @@ class GraphofThought(BaseScheme):
         lm.chat = timed_chat
         return lm
 
-    def _run_arithmetic_got(self, query):
-        """Execute arithmetic task using Graph of Thoughts"""
+    def _run_arithmetic_tot(self, query):
+        """Execute arithmetic task using Tree of Thoughts"""
         config_path = os.path.join(os.path.dirname(__file__), '..', 'graph-of-thoughts', 
                                    'graph_of_thoughts', 'language_models', 'config.json')
         lm = got.language_models.ChatGPT(config_path, model_name="chatgpt", cache=True)
@@ -85,14 +81,14 @@ class GraphofThought(BaseScheme):
         
         executor = got.controller.Controller(
             lm,
-            arith_8.got(),
+            arith_8.tot(), 
             arith_8.ArithPrompter(),
             arith_8.ArithParser(),
             {
                 "original": query, 
                 "current": "", 
                 "phase": 0, 
-                "method": "got"
+                "method": "tot"
             }
         )
 
@@ -107,8 +103,8 @@ class GraphofThought(BaseScheme):
                 return result[0] if isinstance(result, list) and result else result
         return None
 
-    def _run_large_digit_got(self, query):
-        """Execute large digit task using Graph of Thoughts"""
+    def _run_large_digit_tot(self, query):
+        """Execute large digit task using Tree of Thoughts"""
         config_path = os.path.join(os.path.dirname(__file__), '..', 'graph-of-thoughts', 
                                    'graph_of_thoughts', 'language_models', 'config.json')
         lm = got.language_models.ChatGPT(config_path, model_name="chatgpt", cache=True)
@@ -118,14 +114,14 @@ class GraphofThought(BaseScheme):
         
         executor = got.controller.Controller(
             lm,
-            digit_8.got(),
+            digit_8.tot(),
             digit_8.DigitPrompter(),
             digit_8.DigitParser(),
             {
                 "original": query, 
                 "current": "", 
                 "phase": 0, 
-                "method": "got"
+                "method": "tot"
             }
         )
 

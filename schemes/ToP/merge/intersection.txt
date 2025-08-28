@@ -1,0 +1,30 @@
+<Instruction> Merge the following two lists by appending the second list to the first, then sort the combined list in ascending order.
+Only output the final list without any additional text or thoughts!
+** Do not use json format ** </Instruction>
+
+<Steps>
+1. Copy all numbers from List 1, preserving their order.  
+2. Append all numbers from List 2 in their original order.  
+3. Sort the resulting list in ascending numeric order.  
+4. Output ONLY the sorted list (one line, no extra text, no thoughts).
+</Steps>
+
+
+<Examples>
+List 1: [37, 29, 7]
+List 2: []
+<!-- 1. Append []  → [37, 29, 7]
+     2. Sort asc  → [7, 29, 37] -->
+Output: [7, 29, 37]
+
+List 1: [5, 7, 3, 32, 15, 27]
+List 2: [11, 0, 23, 8]
+<!-- 1. Append → [5, 7, 3, 32, 15, 27, 11, 0, 23, 8]
+     2. Sort   → [0, 3, 5, 7, 8, 11, 15, 23, 27, 32] -->
+Output: [0, 3, 5, 7, 8, 11, 15, 23, 27, 32]
+</Examples>
+
+List 1: {input_list1}
+List 2: {input_list2}
+
+Let's think step by step.
