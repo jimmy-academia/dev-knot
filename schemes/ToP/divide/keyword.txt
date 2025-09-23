@@ -1,0 +1,19 @@
+<Instruction> Split the following input text into 2 paragraphs of approximately same length.
+Only output the final 2 paragraphs in the following format without any additional text, thoughts or json format:
+{{
+    "Paragraph 1": "Some paragraph text ...",
+    "Paragraph 2": "Some paragraph text ..."
+}}
+</Instruction>
+
+<Example>
+Input:
+Journeying westward, she admired the art in Italy and sipped coffee in France. The music of Spain and the history of Greece deepened her love for Europe. The Nordic beauty of Norway, Sweden, Finland, and Denmark took her breath away. She danced in Ireland, explored castles in Scotland, and marveled at the architecture in Germany and Russia. Italy, Norway, Sweden and Germany will always stay her favourite destinations to visit.
+Output: 
+{{
+    "Paragraph 1": "Journeying westward, she admired the art in Italy and sipped coffee in France. The music of Spain and the history of Greece deepened her love for Europe. The Nordic beauty of Norway, Sweden, Finland, and Denmark took her breath away.",
+    "Paragraph 2": "She danced in Ireland, explored castles in Scotland, and marveled at the architecture in Germany and Russia. Italy, Norway, Sweden and Germany will always stay her favourite destinations to visit."
+}}
+</Example>
+
+Input: {input}

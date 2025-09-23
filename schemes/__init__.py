@@ -7,14 +7,13 @@ from schemes.ps import PlanAndSolve
 from schemes.cot import ChainofThought, ZeroCoT, SelfConsistentCoT
 
 from schemes.aot import AlgorithmofThought
-# from schemes.tot import TreeofThought
 from schemes.top import TreeOfProblems
 from schemes.got import GraphofThought
 
 from schemes.knot import kNetworkofThought
 from schemes.rknot import rkNetworkofThought
 from schemes.dknot import dkNetworkofThought
-
+from schemes.tot import TreeofThought
 
 SCHEME_DICT = {
     'zero': ZeroFewShot,
@@ -27,7 +26,7 @@ SCHEME_DICT = {
     'cot': ChainofThought, 
     'cotsc': SelfConsistentCoT,
     'aot': AlgorithmofThought,
-    # 'tot': TreeofThought, 
+    'tot': TreeofThought, 
     'top': TreeOfProblems,
     'got': GraphofThought, ## run in Graph-of-thought for yelp
     'knot': kNetworkofThought, 

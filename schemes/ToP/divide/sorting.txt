@@ -1,0 +1,17 @@
+<Instruction> Split the following list of {length} numbers into 2 lists of {length_divide} numbers each, the first list should contain the first {length_divide} numbers and the second list the second {length_divide} numbers.
+Only output the final 2 lists in the following format without any additional text or thoughts!:
+{{
+    "List 1": [3, 4, 3, 5, 7, 8, 1, ...],
+    "List 2": [2, 9, 2, 4, 7, 1, 5, ...]
+}} </Instruction>
+
+<Example>
+Input: [9, 6, 8, 4, 5, 7, 0, 7, 8, 6, 1, 4, 8, 2, 6, 5]
+Output:
+{{
+    "List 1": [9, 6, 8, 4, 5, 7, 0, 7],
+    "List 2": [8, 6, 1, 4, 8, 2, 6, 5]
+}}
+</Example>
+
+Input: {input}
