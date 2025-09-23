@@ -73,11 +73,11 @@ class Controller:
 
         while len(execution_queue) > 0:
             current_operation = execution_queue.pop(0)
-            self.logger.info("Executing operation %s", current_operation.operation_type)
+            # print("Executing operation %s", current_operation.operation_type)
             current_operation.execute(
                 self.lm, self.prompter, self.parser, **self.problem_parameters
             )
-            self.logger.info("Operation %s executed", current_operation.operation_type)
+            # print("Operation %s executed", current_operation.operation_type)
             for operation in current_operation.successors:
                 assert (
                     operation in self.graph.operations
@@ -105,6 +105,7 @@ class Controller:
         :param path: The path to the output file.
         :type path: str
         """
+        problem_solved : bool
         output = []
         for operation in self.graph.operations:
             operation_serialized = {
@@ -138,7 +139,22 @@ class Controller:
                 operation_serialized["problem_solved"] = [
                     thought.solved for thought in operation.get_thoughts()
                 ]
+
+                # operation_serialized["problem_solved"] is a list
+                if operation_serialized["problem_solved"][0] == True:
+                    problem_solved = True
+                else:
+                    problem_solved = False
+
             output.append(operation_serialized)
+
+        final_ans = operation_serialized['thoughts'][0]['current']
+        if type(final_ans) == type([]):
+            final_ans = final_ans[0]
+        print("fianl_ans: ", final_ans)
+        print("problem_solved: ", problem_solved)
+        print("----------------------------")
+            
 
         output.append(
             {
@@ -150,3 +166,5 @@ class Controller:
 
         with open(path, "w") as file:
             file.write(json.dumps(output, indent=2))
+
+        return problem_solved, final_ans

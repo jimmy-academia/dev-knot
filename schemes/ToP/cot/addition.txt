@@ -1,0 +1,17 @@
+<Instruction>
+Add together all the numbers in the given list.  
+You may calculate internally step-by-step (always adding exactly two numbers at a time), **but output only the final total**—no intermediate steps, no extra text, no JSON.
+</Instruction>
+
+<Examples>
+Input: [5, 2, 1]
+8
+
+Input: [9, 0, 3, 4]
+16
+
+Input: [7, 7]
+14
+</Examples>
+
+Input: {input}

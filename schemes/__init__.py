@@ -13,6 +13,7 @@ from schemes.got import GraphofThought
 
 from schemes.knot import kNetworkofThought
 from schemes.rknot import rkNetworkofThought
+from schemes.tot import TreeofThought
 
 
 SCHEME_DICT = {
@@ -31,6 +32,7 @@ SCHEME_DICT = {
     'got': GraphofThought, ## run in Graph-of-thought for yelp
     'knot': kNetworkofThought, 
     'rknot': rkNetworkofThought,
+    'tot': TreeofThought
 }
 
 
