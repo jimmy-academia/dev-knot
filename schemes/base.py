@@ -94,16 +94,19 @@ class BaseScheme(object):
             # print(output, answer)
             # return True
 
-            if total == 5:
+            if total == 100:
                 break
 
             # check()
 
         perstep_worst, perstep_mean, perstep_std = worst_meanstd(self.perstep_runtimes)
         total_worst, total_mean, total_std = worst_meanstd(self.total_runtimes)
+
+        print()
+        print('latency results for', self.args.task, self.args.div)
         print(f'{perstep_worst:.2f}, {perstep_mean:.2f}± {perstep_std:.2f}')
         print(f'{total_worst:.2f}, {total_mean:.2f}± {total_std:.2f}')
-        input('pause')
+        # input('pause')
 
         results['info'] = f"Correct: {correct}/Total: {total}"
         dumpj(results, self.args.record_path)

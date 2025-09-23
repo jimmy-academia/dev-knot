@@ -24,8 +24,8 @@ exposures_pool = [
 workflow_names = [
     "Vitals-First with Comorbidity Overlay",
     "Symptom Cluster Then Escalation",
-    # "Duration-Weighted Symptom Score",
-    # "Immunosuppression Priority Pathway",
+    "Duration-Weighted Symptom Score",
+    "Immunosuppression Priority Pathway",
     # ===
     # "Infection-Flag with Social Modifier",
     # "Exposure-Based Routing",

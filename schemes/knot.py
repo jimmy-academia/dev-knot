@@ -49,7 +49,7 @@ Task_Specific_Example = {
 (12)=LLM("Rephrase the decision logic step as follows: If severity is moderate and risk is high → Urgent clinical evaluation. Given severity={(7)} and risk={(10)}, Does this branch applies (applies, does not apply)?")
 (13)=LLM("Rephrase the decision logic step as follows: If severity is moderate and risk is standard → Outpatient evaluation. Given severity={(7)} and risk={(10)}, does this branch applies (applies, does not apply)?")
 (14)=LLM("Rephrase the decision logic step as follows: If severity is mild → Home care. Given severity={(7)} and risk={(10)}, does this branch applies (applies, does not apply)?")
-(15)=LLM("The result of each branch is: ER referral {(3)}. Urgent clinical evaluation {(4)}. Outpatient evaluation {(5)}. Home care {(6)}. Output the one that is applicable")
+(15)=LLM("The result of each branch is: ER referral {(11)}. Urgent clinical evaluation {(12)}. Outpatient evaluation {(13)}. Home care {(14)}. Output the one that is applicable")
 """,
     'gsm8k': """example for length = 2
 (0)=LLM("Split the into a list of separate problems as : ["Problem 1...", "Problem 2...", ..., "Final Problem: what is the sum of the answers from all of the problems?"] \n {(input)}")
@@ -252,7 +252,7 @@ The Input section is the input query. The Context section is the goal we want to
         script = self.llm_answer(script_prompt, True)
         print(script)
         print('_'*50)
-        # input('pause')
+        input('pause')
 
         cache = {}
         perstep = []

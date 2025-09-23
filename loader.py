@@ -80,6 +80,20 @@ def get_task_loader(args):
         dataset = load_from_disk("data/gsm8k/")
         query_list = []
         answer_list = []
+        for i in range(100):
+            query = dataset['test'][i]['question']
+            answer = int(dataset['test'][i]['answer'].split('#### ')[1].replace(",", ""))
+            query_list.append(query)
+            answer_list.append(answer)
+
+        return zip(query_list, answer_list)
+    
+
+    if args.task == 'gsm8k_composite':
+        from datasets import load_from_disk
+        dataset = load_from_disk("data/gsm8k/")
+        query_list = []
+        answer_list = []
         problem_id = 0
         for i in range(100):
             query = ''
