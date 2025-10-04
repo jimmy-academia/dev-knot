@@ -1,4 +1,4 @@
-### dev knot
+### dev xnot
 # python main.py
 
 import logging
@@ -25,7 +25,7 @@ def set_arguments():
     parser.add_argument('--ckpt', type=str, default='ckpt')
 
     # Task, prompt scheme
-    parser.add_argument('--scheme', type=str, default='knot') 
+    parser.add_argument('--scheme', type=str, default='xnot') 
     parser.add_argument('--task', type=str, default='healthcare')
     # yelp:[10, 20, 30], keyword:[4, 2, 1], sorting:[16, 32, 64], intersection:[32, 64, 128], arithmetic:[8, 16, 32], large_digit:[8, 16, 32]
     # addition:[8, 16, 32]; game24; gsm8k
@@ -41,7 +41,7 @@ def main():
         args.planner_llm = "gpt-4.1"
         # args.worker_llm = "chatgpt-4o-latest"
         # args.worker_llm = "gpt-4o-mini"
-    if args.scheme == 'rknot':
+    if args.scheme == 'rxnot':
         args.planner_llm = "o1-mini"
         args.worker_llm = "chatgpt-4o-latest"
 
@@ -55,7 +55,7 @@ def main():
         logging.info(f'{args.record_path} exists')
         return
 
-    planner_info = f'{args.planner_llm} +> ' if 'knot' in args.scheme else ''
+    planner_info = f'{args.planner_llm} +> ' if 'xnot' in args.scheme else ''
     logging.info(f'== running exp: {args.scheme} on {args.task}:{args.div} with {planner_info}{args.worker_llm}')
 
     task_loader = get_task_loader(args)
