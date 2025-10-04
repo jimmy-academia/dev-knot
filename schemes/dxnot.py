@@ -63,7 +63,7 @@ def writef(path, content):
     with open(path, 'w') as f:
         f.write(content)
 
-class dkNetworkofThought(BaseScheme):
+class dxNetworkofThought(BaseScheme):
     
     def prep_const_prompt(self):
         pass        

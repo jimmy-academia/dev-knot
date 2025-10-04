@@ -30,6 +30,15 @@ You can only operate two numbers at a time. Calculate from left to right. Do mul
     'addition2': "Perform the arithmetic result of input. Do not add numbers 1-by-1, add it 2-by-2. You must add two numbers from the list to the tally at each step.",
     'addition3': "Perform the arithmetic result of input. Do not add numbers 1-by-1, add it 3-by-3. You must add three numbers from the list to the tally at each step.",
     'addition4': "Perform the arithmetic result of input. You must process four numbers at a time.",
+    'game24': (
+      "You are solving the 24 Game. "
+      "You are given exactly four numbers. You must use each number exactly once, "
+      "and you may use addition, subtraction, multiplication, and division. "
+      "You can use parentheses to change precedence. "
+      "Your goal is to form an expression that evaluates to exactly 24. "
+      "If no solution exists, output 'No solution'. "
+      "Always show the reasoning steps clearly: try different combinations systematically."
+    )
 }
 
 Task_Specific_Example = {
@@ -157,6 +166,9 @@ Output a Python list where each review is a string element, preserving the [REVI
 (2*length-1)=LLM("Calculate {(2*length-2)}+{(0)}[0][0]+{(0)}[1][0]. Only output result.")
 (2*length)=LLM("Calculate {(2*length-1)} divide 10, Only output integer.")
 (2*length+1)=LLM("Convert into an integer: {(2*length)}{(2*length-1)}[-1]{(2*length-3)}[-1]{(2*length-5)}[-1]......{(25)}[-1]{(23)}[-1]{(21)}[-1]{(19)}[-1]{(17)}[-1]{(15)}[-1]{(13)}[-1]{(11)}[-1]{(9)}[-1]{(7)}[-1]{(5)}[-1]{(3)}[-1]{(1)}[-1]")""",
+    'game24': """
+    
+    """
 }
 
 def _sub(match, query, cache):
@@ -193,7 +205,7 @@ def _sub(match, query, cache):
     # Return the base value as a string
     return str(base_value)
 
-class kNetworkofThought(BaseScheme):
+class xNetworkofThought(BaseScheme):
     
     def prep_const_prompt(self):
         self.knowledge_prompt = """
@@ -279,7 +291,7 @@ The Input section is the input query. The Context section is the goal we want to
                 cache[index] = ast.literal_eval(output)
             except:
                 cache[index] = output
-
+        self.total_runtimes.append(sum(self.perstep_runtimes))
         iscorrect = self.ground_truth.lower() in output.lower() if self.args.task == 'healthcare' else self.ground_truth == output
 
         print('ground_truth:', self.ground_truth, 'answer:', output, iscorrect)

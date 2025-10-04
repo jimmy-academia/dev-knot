@@ -33,7 +33,7 @@ def writef(path, content):
     with open(path, 'w') as f:
         f.write(content)
 
-class rkNetworkofThought(BaseScheme):
+class rxNetworkofThought(BaseScheme):
     
     def prep_const_prompt(self):
         self.knowledge_prompt = """
