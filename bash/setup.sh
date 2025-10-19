@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script to set up dev-knot environment with UV
+# Script to set up dev-xnot environment with UV
 
 # Check if UV is installed
 if ! command -v uv &> /dev/null; then

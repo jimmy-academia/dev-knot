@@ -11,7 +11,7 @@ resolution-markers = [
 
 [manifest]
 members = [
-    "dev-knot",
+    "dev-xnot",
     "ref-past",
 ]
 
@@ -551,7 +551,7 @@ wheels = [
 ]
 
 [[package]]
-name = "dev-knot"
+name = "dev-xnot"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

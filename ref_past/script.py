@@ -41,7 +41,7 @@ args = parser.parse_args()
 with open(args.dataset, 'r') as f:
     rows = csv.reader(f)
     correct = 0
-    pbar = tqdm(rows, ncols=88, total=100, desc='old-knot')
+    pbar = tqdm(rows, ncols=88, total=100, desc='old-xnot')
     for row in pbar:
         with open(args.record, 'a') as f:
             if "set_intersection" in args.dataset:

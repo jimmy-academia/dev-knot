@@ -8,12 +8,12 @@ import importlib
 import logging
 from .base import BaseScheme
 from debug import *
-import graph_of_thoughts as got
+import schemes.graph_of_thoughts as got
 
 # Import graph-of-thoughts modules
 try:
-    arith_8 = importlib.import_module('graph-of-thoughts.examples.arithmetic.arith_8')
-    digit_8 = importlib.import_module('graph-of-thoughts.examples.large_digit.digit_8')
+    arith_8 = importlib.import_module('schemes.graph_of_thoughts.examples.arithmetic.arith_8')
+    digit_8 = importlib.import_module('schemes.graph_of_thoughts.examples.large_digit.digit_8')
     TREE_OF_THOUGHTS_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Could not import graph-of-thoughts modules: {e}")

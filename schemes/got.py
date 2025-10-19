@@ -8,12 +8,16 @@ import importlib
 import logging
 from .base import BaseScheme
 from debug import *
+# Add the graph_of_thoughts directory to Python path
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'graph_of_thoughts'))
+
 import graph_of_thoughts as got
 
 # Import graph-of-thoughts modules
 try:
-    arith_8 = importlib.import_module('graph-of-thoughts.examples.arithmetic.arith_8')
-    digit_8 = importlib.import_module('graph-of-thoughts.examples.large_digit.digit_8')
+    import examples.arithmetic.arith_8 as arith_8
+    import examples.large_digit.digit_8 as digit_8
     GRAPH_OF_THOUGHTS_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Could not import graph-of-thoughts modules: {e}")
@@ -76,7 +80,7 @@ class GraphofThought(BaseScheme):
 
     def _run_arithmetic_got(self, query):
         """Execute arithmetic task using Graph of Thoughts"""
-        config_path = os.path.join(os.path.dirname(__file__), '..', 'graph-of-thoughts', 
+        config_path = os.path.join(os.path.dirname(__file__), 'graph-of-thoughts', 
                                    'graph_of_thoughts', 'language_models', 'config.json')
         lm = got.language_models.ChatGPT(config_path, model_name="chatgpt", cache=True)
         
@@ -109,7 +113,7 @@ class GraphofThought(BaseScheme):
 
     def _run_large_digit_got(self, query):
         """Execute large digit task using Graph of Thoughts"""
-        config_path = os.path.join(os.path.dirname(__file__), '..', 'graph-of-thoughts', 
+        config_path = os.path.join(os.path.dirname(__file__), 'graph-of-thoughts', 
                                    'graph_of_thoughts', 'language_models', 'config.json')
         lm = got.language_models.ChatGPT(config_path, model_name="chatgpt", cache=True)
         

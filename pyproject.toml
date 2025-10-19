@@ -1,5 +1,5 @@
 [project]
-name = "dev-knot"
+name = "dev-xnot"
 version = "0.1.0"
 description = "Knowledgeable Network of Thought framework for reasoning with Large Language Models"
 readme = "README.md"

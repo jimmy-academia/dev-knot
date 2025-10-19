@@ -1,6 +1,6 @@
 
 #!/bin/bash
-# Script to run dev-knot with UV
+# Script to run dev-xnot with UV
 
 # Ensure virtual environment is activated
 if [[ "$VIRTUAL_ENV" == "" ]]; then
