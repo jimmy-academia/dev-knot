@@ -1,141 +1,203 @@
-import re
-import ast
 import os
+import sys
 import time
-from functools import partial
-import importlib
-
 import logging
 from .base import BaseScheme
-from debug import *
-import graph_of_thoughts as got
 
-# Import graph-of-thoughts modules
+GOT_ROOT = os.path.join(os.path.dirname(__file__), '..', 'graph_of_thoughts')
+if os.path.exists(GOT_ROOT):
+    sys.path.insert(0, GOT_ROOT)
+    GOT_PKG = os.path.join(GOT_ROOT, 'graph_of_thoughts')
+    if GOT_PKG not in sys.path:
+        sys.path.insert(0, GOT_PKG)
+
+GOT_AVAILABLE = False
 try:
-    arith_8 = importlib.import_module('graph-of-thoughts.examples.arithmetic.arith_8')
-    digit_8 = importlib.import_module('graph-of-thoughts.examples.large_digit.digit_8')
-    GRAPH_OF_THOUGHTS_AVAILABLE = True
+    from graph_of_thoughts import controller, language_models, operations
+    GOT_AVAILABLE = True
+    logging.info(f"Successfully loaded graph_of_thoughts")
 except ImportError as e:
-    print(f"Warning: Could not import graph-of-thoughts modules: {e}")
-    GRAPH_OF_THOUGHTS_AVAILABLE = False
+    logging.warning(f"graph_of_thoughts not available: {e}")
 
 class GraphofThought(BaseScheme):
-
+    
     def prep_const_prompt(self):
-        self.system_servent = "You follow orders strictly. Output the answer without any additional information."
-
+        pass
+    
     def prep_task_spcefics(self):
-        example = """Input: [REVIEW_1] A menu that satisfies everyone's cravings! Clean, trendy, and delicious! I definitely recommend going early (before 9 am) as the wait tends to get longer after 9 am! But honestly, it is soooo worth the wait. You will leave there feeling so incredible satisfied! [REVIEW_2] I am a long term frequent customer of this establishment. I just went in to order take out (3 apps) and was told they're too busy to do it. Really? The place is maybe half full at best. Does your dick reach your ass? Yes? Go fuck yourself! I'm a frequent customer AND great tipper. Glad that Kanella just opened. NEVER going back to dmitris! Output: 1 Input: [REVIEW_1] The pasta was amazing and the service was excellent! [REVIEW_2] The food was great but the service was terrible. [REVIEW_3] I love this place and will definitely come back. Output: 2"""
-
-        self.script = """(0)=LLM("Split the following batch of review into two: {(input)}. Output an array.")
-(1)=LLM("Count how many review in the following batch is Positive: """+example+""" Input {(0)}[0] Output:")
-(2)=LLM("Count how many review in the following batch is Positive: """+example+""" Input {(0)}[0] Output:")
-(3)=LLM("Combine the two integer counts into a single integer by adding them together. Output only the integer sum. Counts: {(1)} {(2)}. Output")
-"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
+        self.task_name = self.args.task.split(':')[0]
+        self.div = self.args.div
+        
+        self.task_files = {
+            'keyword': 'keyword_counting/keyword.py',
+            'set_intersection': 'set_intersection/intersection.py',
+            'sorting': 'sorting/sorting.py',
+            'arithmetic': 'arithmetic/arithmetic.py',      
+            'large_digit': 'large_digit/large_digit.py',   
+        }
+    
     def solve_query(self, query):
-        # Measure total runtime
+        if not GOT_AVAILABLE:
+            raise RuntimeError("graph_of_thoughts not available")
+        
         start_time = time.time()
         
-        task = getattr(self.args, 'task', 'arithmetic')
+        task_file = self.task_files.get(self.task_name)
+        if not task_file:
+            raise ValueError(f"Task {self.task_name} not supported in GoT")
         
-        # Try Graph of Thoughts first
-        if GRAPH_OF_THOUGHTS_AVAILABLE:
-            try:
-                if task == 'arithmetic':
-                    result = self._run_arithmetic_got(query)
-                elif task == 'large_digit':
-                    result = self._run_large_digit_got(query)
-            except Exception as e:
-                print(f"GoT failed: {e}")
-        else:
-            raise Exception("Graph of Thoughts not available")
-
-        # Record total runtime
+        try:
+            task_module = self._load_task_module(task_file)
+            
+            config_path = os.path.join(
+                GOT_ROOT,
+                'graph_of_thoughts',
+                'language_models',
+                'config.json'
+            )
+            
+            if not os.path.exists(config_path):
+                raise FileNotFoundError(f"Config not found: {config_path}")
+            
+            lm = language_models.ChatGPT(
+                config_path,
+                model_name="chatgpt",
+                cache=True
+            )
+            
+            lm = self._patch_lm_timing(lm)
+            initial_state = {
+                "original": query,
+                "current": "",
+                "phase": 0,
+                "method": "got"
+            }
+            
+            executor = controller.Controller(
+                lm,
+                task_module.got(),
+                task_module.get_prompter(),
+                task_module.get_parser(),
+                initial_state
+            )
+            
+            executor.run()
+            result = self._extract_result(executor)
+            result = self._post_process(result)
+            
+        except Exception as e:
+            logging.error(f"GoT execution failed: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
+        
         end_time = time.time()
         self.total_runtimes.append(end_time - start_time)
         
         return result
-
-    def _patch_lm_for_timing(self, lm):
-        """Monkey patch the language model to measure per-step runtime"""
-        original_chat = lm.chat
+    
+    def _load_task_module(self, task_file):
+        import importlib.util
         
-        def timed_chat(*args, **kwargs):
-            step_start_time = time.time()
-            result = original_chat(*args, **kwargs)
-            step_end_time = time.time()
-            self.perstep_runtimes.append(step_end_time - step_start_time)
+        examples_dir = os.path.join(GOT_ROOT, 'examples')
+        module_path = os.path.join(examples_dir, task_file)
+        
+        if not os.path.exists(module_path):
+            raise FileNotFoundError(f"Task module not found: {module_path}")
+        
+        spec = importlib.util.spec_from_file_location("task_module", module_path)
+        module = importlib.util.module_from_spec(spec)
+        
+        if examples_dir not in sys.path:
+            sys.path.insert(0, examples_dir)
+        
+        spec.loader.exec_module(module)
+        
+        return module
+    
+    def _patch_lm_timing(self, lm):
+        if not hasattr(lm, 'generate_text'):
+            return lm
+        
+        original_generate = lm.generate_text
+        
+        def timed_generate(*args, **kwargs):
+            step_start = time.time()
+            result = original_generate(*args, **kwargs)
+            step_end = time.time()
+            self.perstep_runtimes.append(step_end - step_start)
             return result
         
-        lm.chat = timed_chat
+        lm.generate_text = timed_generate
         return lm
-
-    def _run_arithmetic_got(self, query):
-        """Execute arithmetic task using Graph of Thoughts"""
-        config_path = os.path.join(os.path.dirname(__file__), '..', 'graph-of-thoughts', 
-                                   'graph_of_thoughts', 'language_models', 'config.json')
-        lm = got.language_models.ChatGPT(config_path, model_name="chatgpt", cache=True)
-        
-        # Apply timing patch to language model
-        lm = self._patch_lm_for_timing(lm)
-        
-        executor = got.controller.Controller(
-            lm,
-            arith_8.got(),
-            arith_8.ArithPrompter(),
-            arith_8.ArithParser(),
-            {
-                "original": query, 
-                "current": "", 
-                "phase": 0, 
-                "method": "got"
-            }
-        )
-
-        executor.run()
-        
-        # Extract result
-        final_thoughts = executor.get_final_thoughts()
-        if final_thoughts and len(final_thoughts) > 0 and len(final_thoughts[-1]) > 0:
+    
+    def _extract_result(self, executor):
+        try:
+            final_thoughts = executor.get_final_thoughts()
+            
+            if not final_thoughts or len(final_thoughts) == 0:
+                return None
+            
+            if len(final_thoughts[-1]) == 0:
+                return None
+            
             final_thought = final_thoughts[-1][0]
-            if 'current' in final_thought.state:
+            
+            if hasattr(final_thought, 'state') and 'current' in final_thought.state:
                 result = final_thought.state['current']
-                return result[0] if isinstance(result, list) and result else result
-        return None
-
-    def _run_large_digit_got(self, query):
-        """Execute large digit task using Graph of Thoughts"""
-        config_path = os.path.join(os.path.dirname(__file__), '..', 'graph-of-thoughts', 
-                                   'graph_of_thoughts', 'language_models', 'config.json')
-        lm = got.language_models.ChatGPT(config_path, model_name="chatgpt", cache=True)
+                return result
+            
+            return None
+        except Exception as e:
+            logging.error(f"Failed to extract result: {e}")
+            return None
+    
+    def _post_process(self, result):
+        if result is None:
+            logging.warning("[post_process] Result is None")
+            return result
         
-        # Apply timing patch to language model
-        lm = self._patch_lm_for_timing(lm)
+        task_name = self.task_name
         
-        executor = got.controller.Controller(
-            lm,
-            digit_8.got(),
-            digit_8.DigitPrompter(),
-            digit_8.DigitParser(),
-            {
-                "original": query, 
-                "current": "", 
-                "phase": 0, 
-                "method": "got"
-            }
-        )
-
-        executor.run()
+        logging.info(f"[post_process] task={task_name}")
+        logging.info(f"[post_process] result type={type(result)}")
+        logging.info(f"[post_process] result value={result}")
+        logging.info(f"[post_process] ground_truth={getattr(self, 'ground_truth', 'N/A')}")
         
-        # Extract result
-        final_thoughts = executor.get_final_thoughts()
-        if final_thoughts and len(final_thoughts) > 0 and len(final_thoughts[-1]) > 0:
-            final_thought = final_thoughts[-1][0]
-            if 'current' in final_thought.state:
-                result = final_thought.state['current']
-                return result[0] if isinstance(result, list) and result else result
-        return None
+        # Keyword: JSON dict -> Python list
+        if task_name == 'keyword':
+            if isinstance(result, str):
+                try:
+                    import json
+                    country_dict = json.loads(result)
+                    # 将 {"Country": freq} 转换为 [Country, Country, ...]
+                    countries = []
+                    for country, freq in country_dict.items():
+                        countries.extend([country] * freq)
+                    logging.info(f"[post_process] Converted to list: {countries}")
+                    
+                    result_str = str(countries)
+                    logging.info(f"[post_process] Final output: {result_str}")
+                    return result_str
+                except Exception as e:
+                    logging.error(f"[post_process] Failed to parse: {e}")
+                    return str(result)
+            return str(result)
+        
+        elif task_name in ['large_digit', 'arithmetic']:
+            if isinstance(result, (int, float)):
+                result_str = str(result)
+                if task_name == 'arithmetic' and isinstance(result, float):
+                    result_str = f"{result:.2f}"
+                logging.info(f"[post_process] Converted to string: {result_str}")
+                return result_str
+            return str(result)
+        
+        elif task_name in ['sorting', 'set_intersection']:
+            if isinstance(result, list):
+                result_str = str(result)
+                logging.info(f"[post_process] Converted to string: {result_str}")
+                return result_str
+            return str(result)
+        
+        return str(result)

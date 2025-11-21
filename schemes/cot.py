@@ -10,8 +10,12 @@ ContextPrompts = {
     'yelp': 'We are counting the number of positive reviews from the review list: ',
     'addition': 'We are calculating the arithmetic result of input sequence: ',
     'arithmetic': 'We are calculating the arithmetic result of input sequence: ',
-    'gsm8k': 'We are solving the math problems and adding up the answers to give the final answer.'
+    'gsm8k': 'We are solving the math problems and adding up the answers to give the final answer.',
+    'sorting': 'You will sort the given list step by step.',
+    'set_intersection': 'You will find the intersection of two sets step by step.',
+    'large_digit': 'You will perform large number addition step by step.'
 }
+
 Task_Specific_Example = {
     'addition': """Input: 8+2+7+3+5+5+1+9
 
@@ -265,9 +269,62 @@ Input: {query}
 Let's think step by step. 
 
 Output:
-"""
-    
+""",
 
+    'sorting': """Input: [3, 1, 2]
+
+    Let's think step by step
+
+    Output:
+    [3, 1, 2]
+    Compare 3 and 1 → swap → [1, 3, 2]
+    Compare 3 and 2 → swap → [1, 2, 3]
+
+    Final answer: [1, 2, 3]
+
+    Input: {query}
+
+    Let's think step by step.
+
+    Output:
+""",
+    
+        'set_intersection': """Input: ({1, 2, 3}, {2, 3, 4})
+
+    Let's think step by step
+
+    Output:
+    Both sets: A = {1, 2, 3}, B = {2, 3, 4}
+    Common elements are 2 and 3.
+
+    Final answer: {2, 3}
+
+    Input: {query}
+
+    Let's think step by step.
+
+    Output:
+""",
+    
+        'large_digit': """Input: 1234 + 5678
+
+    Let's think step by step
+
+    Output:
+    Add the units: 4 + 8 = 12 → write 2, carry 1
+    Add the tens: 3 + 7 + 1 = 11 → write 1, carry 1
+    Add the hundreds: 2 + 6 + 1 = 9 → write 9
+    Add the thousands: 1 + 5 = 6 → write 6
+    So we get 6912.
+
+    Final answer: 6912
+
+    Input: {query}
+
+    Let's think step by step.
+
+    Output:
+""",
 
 }
 
@@ -281,20 +338,39 @@ class ZeroCoT(BaseScheme):
         self.context = ContextPrompts[self.args.task]
 
     def extract_answer(self, output):
-        # print(output)
-        if self.args.task == 'keyword':
-            final_output = self.llm_answer(f"format the answer {output} in a one-line list (square brackets) without quotes. example: [Country, Country, Country, ..., Country]")
-        elif self.args.task == 'yelp':
-            final_output = self.llm_answer(f"Based on the {output}, output the number of positive reviews. Output only an integer.")
-        elif self.args.task == 'healthcare':
-            final_output = self.llm_answer(f"Based on the {output}, output the final answer for the correct treatment.")
+        task_name = self.args.task.split(':')[0]
+
+        if task_name == 'keyword':
+            final_output = self.llm_answer(
+                f"format the answer {output} in a one-line list (square brackets) without quotes. "
+                f"example: [Country, Country, Country, ..., Country]"
+            )
+        elif task_name == 'yelp':
+            final_output = self.llm_answer(
+                f"Based on the {output}, output the number of positive reviews. Output only an integer."
+            )
+        elif task_name == 'healthcare':
+            final_output = self.llm_answer(
+                f"Based on the {output}, output the final answer for the correct treatment."
+            )
+        elif task_name == 'sorting':
+            final_output = self.llm_answer(
+                f"extract the list form of the answer: {output}"
+            )
+        elif task_name == 'set_intersection':
+            final_output = self.llm_answer(
+                f"extract the set form of the answer: {output}"
+            )
         else:
-            final_output = self.llm_answer("extract the numerical of the answer:"+output)
-
-
-        logging.info(f'>>>>>>>>>>>> final result: {output} vs ground truth: {self.ground_truth} <<<<<<<<<<<<<')
-        # input('finished 1 sample===> pause|')
+            final_output = self.llm_answer("extract the numerical of the answer:" + output)
+        
+        gt = getattr(self, "ground_truth", None)
+        logging.info(
+            f'>>>>>>>>>>>> final result: {final_output} vs ground truth: {gt} <<<<<<<<<<<<<'
+        )
+        
         return final_output
+
 
     def solve_query(self, query):
         print(query)
@@ -310,22 +386,36 @@ class ZeroCoT(BaseScheme):
 class ChainofThought(ZeroCoT):
     
     def prep_task_spcefics(self):
-        self.context = ContextPrompts[self.args.task]
-        self.cot_example = Task_Specific_Example.get(self.args.task)
+        task_name = self.args.task.split(':')[0]
+
+        if task_name not in ContextPrompts:
+            raise KeyError(f"No context prompt found for task '{task_name}'")
+        self.context = ContextPrompts[task_name]
+
+        self.cot_example = Task_Specific_Example.get(task_name)
+
+        if self.cot_example is None:
+            logging.warning(f"[CoT] No example found for task='{task_name}', using zero-shot.")
+            self.cot_example = "{query}" 
+
 
     def solve_query_once(self, query):
         print(query)
-        output = self.llm_answer(self.context + self.cot_example.format(query=query))
+
+        if "{query}" in self.cot_example:
+            filled_example = self.cot_example.replace("{query}", query)
+        else:
+            filled_example = self.cot_example 
+
+        full_prompt = self.context + filled_example
+
+        output = self.llm_answer(full_prompt)
         print()
         print()
         print(output)
         print()
         print()
         output = self.extract_answer(output)
-
-        # logging.info(f'>>>>>>>>>>>> final result: {output} <<<<<<<<<<<<<')
-        # print(self.ground_truth)
-        # input()
         return output
 
     def solve_query(self, query):

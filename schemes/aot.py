@@ -178,8 +178,20 @@ class AlgorithmofThought(BaseScheme):
         self.prompt = "Let's think step by step"
 
     def prep_task_spcefics(self):
-        self.context = Task_Specific_Concept.get(self.task)
-        self.example = Task_Specific_Example.get(self.task)
+        raw_task = self.args.task
+        task_name = raw_task.split(':')[0]
+
+        self.context = Task_Specific_Concept.get(task_name, "")
+        self.example = Task_Specific_Example.get(task_name)
+
+        self.task_name = task_name
+
+        if self.example is None:
+            logging.warning(
+                f"[aot] No Task_Specific_Example found for task={task_name}. "
+                f"Will build a minimal prompt without example."
+            )
+
 
     def solve(self):
         """Solve the problem using AoT prompt and dfs search algorithm"""
@@ -348,14 +360,20 @@ class AlgorithmofThought(BaseScheme):
         return thought, value
     
     def solve_query(self, query):
-        if self.args.task == 'yelp':
-            initial_prompt = self.context+self.example+query
-        elif self.args.task == 'keyword_counting':
-            initial_prompt = self.context+self.example+str(query)
-        else:
-            initial_prompt = self.context+self.example%str(query)
+        self.prep_task_spcefics()
+        task_name = self.task_name 
 
-        dfs = AlgorithmofThought(
+        if task_name == 'yelp':
+            initial_prompt = (self.context or "") + (self.example or "") + str(query)
+        elif task_name == 'keyword_counting':
+            initial_prompt = (self.context or "") + (self.example or "") + str(query)
+        else:
+            if self.example is None:
+                initial_prompt = (self.context or "") + f"\nQuestion: {query}\n"
+            else:
+                initial_prompt = (self.context or "") + (self.example % str(query))
+
+            dfs = AlgorithmofThought(
             args=self.args,
             task_loader=self.task_loader,
             num_thoughts=2,
@@ -365,17 +383,37 @@ class AlgorithmofThought(BaseScheme):
             openai_api_key=readf('.openaiapi_key'),
         )
         result = dfs.solve()
-        if result is not None:
-            if self.args.task == 'large_digit' or self.args.task == 'arithmetic' or self.args.task == 'yelp':
-                output = self.llm_answer("extract the numerical of the answer:"+result[0])
-            elif self.args.task == 'sorting':
-                output = self.llm_answer("extract the answer of the sorting task from the output with the numbers in this format {1, 2, 4, 7, 9} and no other additional output:"+result[0])
-            elif self.args.task == 'set_intersection':
-                output = self.llm_answer("extract the answer of the set intersection task from the output with the numbers in this format {1, 2, 4, 7, 9} and no other additional output:"+result[0])
-            elif self.args.task == 'keyword_counting':
-                output = self.llm_answer("extract the answer of the keyowrd counting task from the output with the keyword list in this format [Zimbabwe, Norway, Australia, Canada, Zimbabwe] and no other additional output:"+result[0])
-        else:
-            output = 'No answer output by the algo.'
-        # logging.info(f'>>>>>>>>>>>> Final result: {output} <<<<<<<<<<<<<')
-        return output
 
+        if result is None:
+            return 'No answer output by the algo.'
+
+        if isinstance(result, (list, tuple)):
+            text = result[0]
+        else:
+            text = result
+
+        text = str(text)  
+        task_name = self.args.task.split(':')[0]
+
+        if task_name in ['large_digit', 'arithmetic', 'yelp']:
+            output = self.llm_answer("extract the numerical of the answer:" + text)
+
+        elif task_name == 'sorting':
+            output = self.llm_answer(
+                "extract the answer of the sorting task from the output with the numbers in this format {1, 2, 4, 7, 9} and no other additional output:" + text
+            )
+
+        elif task_name == 'set_intersection':
+            output = self.llm_answer(
+                "extract the answer of the set intersection task from the output with the numbers in this format {1, 2, 4, 7, 9} and no other additional output:" + text
+            )
+
+        elif task_name == 'keyword_counting':
+            output = self.llm_answer(
+                "extract the answer of the keyowrd counting task from the output with the keyword list in this format [Zimbabwe, Norway, Australia, Canada, Zimbabwe] and no other additional output:" + text
+            )
+
+        else:
+            output = text
+
+        return output

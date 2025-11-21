@@ -58,5 +58,9 @@ def readf(path):
         return f.read()
 
 def worst_meanstd(_list):
+    if not _list:
+        return 0.0, 0.0, 0.0
+    if len(_list) == 1:
+        return _list[0], _list[0], 0.0
     return max(_list), statistics.mean(_list), statistics.stdev(_list)
 

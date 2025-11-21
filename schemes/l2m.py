@@ -70,7 +70,7 @@ subquestion_dict = {
         '16': large_digit_16_subquestions,
         '32': large_digit_32_subquestions
     },
-    'all_arith': {
+    'arithmetic': {
         '08': all_arith_subquestions,
         '16': all_arith_subquestions,
         '32': all_arith_subquestions
@@ -85,7 +85,7 @@ subquestion_dict = {
         '032': sorting_subquestions,
         '064': sorting_subquestions
     },
-    'keyword': { # Renamed from keyword_counting
+    'keyword': { 
         '1': keyword_counting_subquestions_base,
         '2': keyword_counting_subquestions_base,
         '4': keyword_counting_subquestions_base
@@ -215,10 +215,9 @@ class Least2Most(BaseScheme):
         # Extract base task name if division is present (e.g., "keyword:2" -> "keyword")
         task_name = self.args.task.split(':')[0]
 
-        # Pass text_chunk only if it's relevant for the prompt generation function
         if task_name == 'large_digit':
             prompt = generate_large_digit_prompt(question, context)
-        elif task_name == 'all_arith':
+        elif task_name == 'arithmetic':
             prompt = generate_arithmetic_prompt(question, context)
         elif task_name == 'set_intersection':
             prompt = generate_set_intersection_prompt(question, context)
@@ -293,23 +292,50 @@ class Least2Most(BaseScheme):
             context += f"\n{question}\n{answer}"
             final_answer = answer # Keep track of the last answer
 
-        # Extract final result based on task type
         output = None
-        # Use task_name for checks
-        if task_name in ['large_digit', 'all_arith', 'yelp']:
-            # Extract numerical value from the final answer
-            output = self.llm_answer(f"extract the numerical value of the answer: {final_answer}")
+        if task_name in ['large_digit', 'arithmetic', 'yelp']:
+            output = self.llm_answer(
+                f"Extract ONLY the final numeric answer from this: {final_answer}. Output only the number."
+            )
+
         elif task_name == 'set_intersection':
-            # Extract set representation from the final answer
-            output = self.llm_answer(f"extract the set form of the answer: {final_answer}")
-        # elif task_name in ['sorting', 'keyword']: # Updated check
-            # output = final_answer
-             # Extract list representation from the final answer
-            # output = self.llm_answer(f"extract the list form of the answer: {final_answer}")
+            output = self.llm_answer(
+                f"Extract ONLY the intersection list from this answer: {final_answer}. "
+                f"Output as a Python list, sorted, no explanations."
+            )
+
+        elif task_name == 'keyword':
+            output = self.llm_answer(
+                f"""
+        From the final answer below, extract the complete list of country names.
+        Format it as a ONE-LINE Python list.
+        - Keep order
+        - Keep duplicates
+        - NO quotes
+        - NO explanations
+
+        Final answer: {final_answer}
+        """
+            )
+        
+        elif task_name == 'sorting':
+            output = self.llm_answer(
+                f"""
+        Given the following answer of a sorting problem:
+
+        {final_answer}
+
+        Extract ONLY the final sorted list in ascending order.
+        Output it as a valid Python list, like [0, 1, 2, 3].
+        No explanations, no extra words.
+        """
+                    )     
+            
+
+        # 4. Default fallback
         else:
-             # Default or unknown task type - return the raw final answer
-             logging.warning(f"No specific extraction logic for task '{task_name}'. Returning raw final answer.")
-             output = final_answer
+            logging.warning(f"No specific extraction logic for task '{task_name}'. Returning raw final answer.")
+            output = final_answer
 
 
         # logging.info(f'>>>>>>>>>>>> final result: {output} <<<<<<<<<<<<<')

@@ -13,8 +13,8 @@ python3 script.py --dataset data/add/add_08.csv --record record.txt
 
 ## Illustration
 
-![image](https://anonymous.4open.science/r/kNoT-5048/image/compare2.jpg)
+![image](https://anonymous.4open.science/r/xnot-5048/image/compare2.jpg)
 
-![image](https://anonymous.4open.science/r/kNoT-5048/image/illustration2.jpg)
+![image](https://anonymous.4open.science/r/xnot-5048/image/illustration2.jpg)
 
 
