@@ -4,20 +4,21 @@ import time
 import logging
 from .base import BaseScheme
 
-GOT_ROOT = os.path.join(os.path.dirname(__file__), '..', 'graph_of_thoughts')
-if os.path.exists(GOT_ROOT):
-    sys.path.insert(0, GOT_ROOT)
-    GOT_PKG = os.path.join(GOT_ROOT, 'graph_of_thoughts')
-    if GOT_PKG not in sys.path:
-        sys.path.insert(0, GOT_PKG)
+# Add schemes directory to sys.path so that 'import graph_of_thoughts' works
+# This is necessary because the GoT code uses absolute imports like 'from graph_of_thoughts import ...'
+schemes_dir = os.path.dirname(__file__)
+if schemes_dir not in sys.path:
+    sys.path.insert(0, schemes_dir)
 
 GOT_AVAILABLE = False
 try:
+    import graph_of_thoughts
     from graph_of_thoughts import controller, language_models, operations
     GOT_AVAILABLE = True
     logging.info(f"Successfully loaded graph_of_thoughts")
 except ImportError as e:
     logging.warning(f"graph_of_thoughts not available: {e}")
+    # print(f"Error importing graph_of_thoughts: {e}")
 
 class GraphofThought(BaseScheme):
     
@@ -49,9 +50,9 @@ class GraphofThought(BaseScheme):
         try:
             task_module = self._load_task_module(task_file)
             
+            # Config is now inside schemes/graph_of_thoughts/language_models/config.json
             config_path = os.path.join(
-                GOT_ROOT,
-                'graph_of_thoughts',
+                os.path.dirname(graph_of_thoughts.__file__),
                 'language_models',
                 'config.json'
             )
@@ -99,7 +100,8 @@ class GraphofThought(BaseScheme):
     def _load_task_module(self, task_file):
         import importlib.util
         
-        examples_dir = os.path.join(GOT_ROOT, 'examples')
+        # Examples are now in schemes/got_tasks
+        examples_dir = os.path.join(os.path.dirname(__file__), 'got_tasks')
         module_path = os.path.join(examples_dir, task_file)
         
         if not os.path.exists(module_path):

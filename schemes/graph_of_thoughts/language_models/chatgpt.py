@@ -54,12 +54,27 @@ class ChatGPT(AbstractLanguageModel):
         # The stop sequence is a sequence of tokens that the model will stop generating at (it will not generate the stop sequence).
         self.stop: Union[str, List[str]] = self.config["stop"]
         # The account organization is the organization that is used for chatgpt.
-        self.organization: str = self.config["organization"]
-        if self.organization == "":
+        # The account organization is the organization that is used for chatgpt.
+        self.organization: str = self.config.get("organization", "")
+        if not self.organization:
+            self.organization = os.environ.get("OPENAI_ORGANIZATION")
+
+        if not self.organization:
             self.logger.warning("OPENAI_ORGANIZATION is not set")
-        self.api_key: str = readf('.openaiapi_key')
-        if self.api_key == "":
-            raise ValueError("OPENAI_API_KEY is not set")
+            self.organization = None # Set to None so OpenAI client uses default/env if available
+
+        self.api_key: str = ""
+        try:
+            self.api_key = readf('.openaiapi_key').strip()
+        except FileNotFoundError:
+            pass
+        
+        if not self.api_key:
+            self.api_key = os.environ.get("OPENAI_API_KEY")
+
+        if not self.api_key:
+            raise ValueError("OPENAI_API_KEY is not set. Please set the OPENAI_API_KEY environment variable or create a .openaiapi_key file.")
+            
         # Initialize the OpenAI Client
         self.client = OpenAI(api_key=self.api_key, organization=self.organization)
 

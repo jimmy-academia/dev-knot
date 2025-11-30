@@ -7,17 +7,8 @@ import re
 from .base import BaseScheme
 from .cot import ChainofThought  
 
-try:
-    import schemes.graph_of_thoughts.graph_of_thoughts as got
-except ImportError:
-    try:
-        import schemes.graph_of_thoughts.graph_of_thoughts as got
-    except ImportError:
-        try:
-             from .graph_of_thoughts import graph_of_thoughts as got
-        except ImportError:
-            print("Warning: [ToT] Could not import graph_of_thoughts. TreeofThought scheme may fail.")
-            got = None
+# graph_of_thoughts import removed as it is unused in ToT
+got = None
 
 logger = logging.getLogger(__name__)
 
