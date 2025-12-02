@@ -35,37 +35,45 @@ class BaseScheme(object):
         
         httpx_logger.addFilter(InfoToDebugFilter())
 
-    def llm_call(self, message, model=None, temperature=0):
+    def llm_call(self, message, model=None, temperature=0, max_retries=5):
         if model is None:
             model = self.args.worker_llm
-        response = self.client.chat.completions.create(
+        time.sleep(0.2)  
+
+        for attempt in range(max_retries):
+            try:
+                response = self.client.chat.completions.create(
                     model = model,
                     messages = message,
                     temperature = temperature,
                 )
-        response = response.choices[0].message.content
-        return response
+                return response.choices[0].message.content
+
+            except openai.RateLimitError as e:
+                wait = 2 ** attempt
+                print(f"[RateLimit] hit 429 on model={model}, attempt={attempt+1}/{max_retries}, sleep {wait}s")
+                time.sleep(wait)
+
+            except openai.APIConnectionError as e:
+                wait = 2 ** attempt
+                print(f"[APIConnectionError] {e}, attempt={attempt+1}/{max_retries}, sleep {wait}s")
+                time.sleep(wait)
+
+        raise RuntimeError(f"LLM call failed after {max_retries} retries (model={model})")
+
 
     def llm_answer(self, prompt, planner=False, temperature=0):
         model = self.args.planner_llm if planner else self.args.worker_llm
+
         if 'gpt' in model:
             if self.system_servent is not None:
                 message = [system_struct(self.system_servent), user_struct(prompt)]
             else:
                 message = [user_struct(prompt)]
-            # logging.info(" <<<< input prompt")
-            # logging.info(message)
-            response = self.client.chat.completions.create(
-                        model = model,
-                        messages = message,
-                        temperature = temperature,
-                    )
-            response = response.choices[0].message.content
-            # logging.info(" >>>> \n" + response)
+            return self.llm_call(message, model=model, temperature=temperature)
         else:
             print('llama!')
-
-        return response
+            return ""
 
 
     def operate(self):
@@ -80,7 +88,9 @@ class BaseScheme(object):
         for query, answer in loader_bar:
             self.ground_truth = answer
             
+            start_time = time.time()
             output = self.solve_query(query)
+            self.perstep_runtimes.append(time.time() - start_time)
             # logging.info(f'=> output: {output} vs answer {answer} <<<')
             results['query'].append(query)
             results['output'].append(output)
@@ -134,37 +144,6 @@ class BaseScheme(object):
                 if total == 3:
                     break
 
-        elif self.args.task == "intersection":
-            for set_1, set_2, answer in loader_bar:
-                if len(set_1) < len(set_2):
-                    set_1, set_2 = set_2, set_1
-                # synsize query in dict format
-                query = {"Set1": set_1, "Set2": set_2}
-                
-                self.ground_truth = answer
-                
-                # Record total runtime
-                start_time = time.time()
-                output = self.solve_query(query)
-                end_time = time.time()
-                self.total_runtimes.append(end_time - start_time)
-                
-                results['query'].append(query)
-                results['output'].append(output)
-                results['answer'].append(answer)
-                correct += int(output == answer)
-                total += 1
-                results['accuracy'] = correct/total
-                loader_bar.set_postfix(acc=correct/total)
-                # dumpj(results, self.args.record_path)
-                # print(output, answer)
-                # return True 
-
-                if total == 3:
-                    break
-
-                # check()
-
         if self.perstep_runtimes and self.total_runtimes:
             perstep_worst, perstep_mean, perstep_std = worst_meanstd(self.perstep_runtimes)
             total_worst, total_mean, total_std = worst_meanstd(self.total_runtimes)
@@ -178,31 +157,70 @@ class BaseScheme(object):
 class ZeroFewShot(BaseScheme):
     def prep_const_prompt(self):
         self.system_servent = "You follow orders strictly. Output the answer without any additional information."
+        
     def prep_task_spcefics(self):
         self.context = ContextPrompts[self.args.task]
         if self.args.scheme == 'few':
             self.examples = Few_Shot_Example.get(self.args.task).get(self.args.div) if self.args.task not in ['yelp', 'keyword'] else Few_Shot_Example.get(self.args.task)
         else: 
             self.examples = ""
+            
     def solve_query(self, query):
-        # print(query)
-        output = self.llm_call([system_struct(self.system_servent), user_struct(self.context+self.examples+query)])
-        if self.args.task == 'keyword':
-            final_output = self.llm_answer(f"format the answer {output} in a one-line list (square brackets) without quotes. example: [Country, Country, Country, ..., Country]")
-        elif self.args.task == 'yelp':
-            final_output = self.llm_answer(f"Based on the {output}, output the number of positive reviews. Output only an integer.")
-        else:
-            input('TODO!')
-            output = output
+        resp = self.llm_call([system_struct(self.system_servent),
+                            user_struct(self.context + self.examples + (str(query) if isinstance(query, dict) else query))])
 
-        # input(output)
-        return output
+        t = self.args.task
+
+        if t == 'keyword':
+            return self.llm_answer(
+                f"Format the answer {resp} as a one-line Python list (square brackets), no quotes, keep order, keep duplicates."
+            )
+
+        if t == 'yelp':
+            return self.llm_answer(
+                f"From {resp}, output only the number of positive reviews as an integer. Output only the integer."
+            )
+
+        if t == 'sorting':
+            return self.llm_answer(
+                f"Given {resp}, output only the sorted list in ascending order as a Python list. Output list only."
+            )
+
+        if t == 'set_intersection':
+            return self.llm_answer(
+                f"Given the two sets in {resp}, output only their intersection as a sorted Python list. Output list only."
+            )
+
+        if t == 'arithmetic':
+            return self.llm_answer(
+                f"Compute {resp}. Output only the final numeric result. No steps."
+            )
+
+        if t == 'large-digit':
+            return self.llm_answer(
+                f"Compute the exact sum in {resp}. Output only the integer (no commas, no spaces)."
+            )
+
+        if t == 'addition':
+            return self.llm_answer(
+                f"Compute the total sum indicated by {resp}. Output only the integer."
+            )
+
+        # fallback
+        return resp
+
 
 
 ContextPrompts = {
     'keyword': 'We are extracting every occurrence of country names, preserving duplicates and maintaining their original order in the paragraph: ',
-    'yelp': 'We are counting the number of positive reviews from the review list: '
+    'yelp': 'We are counting the number of positive reviews from the review list: ',
+    'sorting': 'We are sorting the given list of numbers in ascending order: ',
+    'set_intersection': 'We are finding the intersection of the following two sets, returning a sorted list of common elements: ',
+    'arithmetic': 'We are solving the arithmetic expression and outputting the final numeric result: ',
+    'large_digit': 'We are calculating the sum of the two large numbers accurately: ',
+    'addition': 'We are computing the total sum of the given numbers: '
 }
+
 
 Few_Shot_Example = {
     'yelp': """
@@ -233,7 +251,7 @@ Answer: [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7,
 """
     },
     
-    'intersection': {
+    'set_intersection': {
         '32': """
 Input: 
 Set1: [11, 60, 1, 49, 21, 33, 14, 56, 54, 15, 23, 40, 45, 22, 7, 28, 20, 46, 51, 6, 34, 37, 3, 50, 17, 8, 25, 0, 35, 47, 18, 19]

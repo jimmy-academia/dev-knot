@@ -1,6 +1,6 @@
-# dev kNoT
+# dev xnot
 
-A tool for the Knowledgeable Network of Thought (kNoT) framework for reasoning with Large Language Models.
+A tool for the Knowledgeable Network of Thought (xnot) framework for reasoning with Large Language Models.
 
 ## Installation
 
@@ -32,7 +32,7 @@ chmod +x run.sh
 ./run.sh
 
 # Or run with custom parameters
-./run.sh --task gsm_symbolic --scheme knot --worker_llm gpt-4o
+./run.sh --task gsm_symbolic --scheme xnot --worker_llm gpt-4o
 ```
 
 ### Using the Makefile
@@ -47,7 +47,7 @@ make setup
 make run
 
 # Run with custom parameters
-make run ARGS="--task gsm_symbolic --scheme knot"
+make run ARGS="--task gsm_symbolic --scheme xnot"
 
 # Clean up temporary files
 make clean
@@ -67,7 +67,7 @@ python main.py
 
 ## Parameters
 
-- `--scheme`: The reasoning scheme to use (knot, cot, zerocot)
+- `--scheme`: The reasoning scheme to use (xnot, cot, zerocot)
 - `--task`: The task to solve (addition, gsm_symbolic, game24)
 - `--worker_llm`: The LLM to use as worker (default: gpt-4o)
 - `--planner_llm`: The LLM to use as planner (default: gpt-4o)

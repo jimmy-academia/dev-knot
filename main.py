@@ -1,4 +1,4 @@
-### dev knot
+### dev xnot
 # python main.py
 
 import logging
@@ -10,6 +10,7 @@ from schemes import setup_scheme
 from utils import set_seeds, set_verbose
 
 from debug import check
+import os
 
 def set_arguments():
     parser = argparse.ArgumentParser(description='Run experiments')
@@ -25,7 +26,7 @@ def set_arguments():
     parser.add_argument('--ckpt', type=str, default='ckpt')
 
     # Task, prompt scheme
-    parser.add_argument('--scheme', type=str, default='knot') 
+    parser.add_argument('--scheme', type=str, default='xnot') 
     parser.add_argument('--task', type=str, default='healthcare')
     # yelp:[10, 20, 30], keyword:[4, 2, 1], sorting:[16, 32, 64], intersection:[32, 64, 128], arithmetic:[8, 16, 32], large_digit:[8, 16, 32]
     # addition:[8, 16, 32]; game24; gsm8k
@@ -55,10 +56,19 @@ def main():
         logging.info(f'{args.record_path} exists')
         return
 
-    planner_info = f'{args.planner_llm} +> ' if 'knot' in args.scheme else ''
+    planner_info = f'{args.planner_llm} +> ' if 'xnot' in args.scheme else ''
     logging.info(f'== running exp: {args.scheme} on {args.task}:{args.div} with {planner_info}{args.worker_llm}')
 
     task_loader = get_task_loader(args)
+    
+    output_dir = os.path.join("output", args.task, args.scheme)
+    os.makedirs(output_dir, exist_ok=True)
+
+    args.record_path = os.path.join(
+        output_dir,
+        f"{args.task}_{args.scheme}_{args.div}_{args.worker_llm}.json"
+    )
+    
     Scheme = setup_scheme(args, task_loader) # set up scheme for task
     Scheme.operate() # and record intermediate step/ final result
 

@@ -440,14 +440,14 @@ yelp_subquestions = ['Count the number of positive reviews in the first chunk',
                      'Summarize the total number of positive reviews at the end.']
 
 subquestion_dict = {'large_digit':{'8':large_digit_8_subquestions,'16':large_digit_16_subquestions,'32':large_digit_32_subquestions},
-                    'all_arith':all_arith_subquestions,
+                    'arithmetic':all_arith_subquestions,
                     'set_intersection':{'032':set_intersection_32_subquestions, '064':set_intersection_64_subquestions, '128':set_intersection_128_subquestions},
                     'sorting':{'016':sorting_subquestions,'032':sorting_subquestions,'064':sorting_subquestions},
                     'keyword':keyword_counting_subquestions,
                     'yelp':yelp_subquestions}
 
 Task_Specific_Example = {'large_digit':{'8':large_digit_8_examples,'16':large_digit_16_examples,'32':large_digit_32_examples},
-                         'all_arith':{'08':all_arith_8_solving_examples,'16':all_arith_16_solving_examples,'32':all_arith_32_solving_examples},
+                         'arithmetic':{'08':all_arith_8_solving_examples,'16':all_arith_16_solving_examples,'32':all_arith_32_solving_examples},
                          'set_intersection':{'032':set_intersection_32_examples,'064':set_intersection_64_examples,'128':set_intersection_128_examples},
                          'sorting':{'016':sorting_16_examples,'032':sorting_32_examples,'064':sorting_64_examples},
                          'keyword':keyword_counting_example,
@@ -473,79 +473,115 @@ def get_review_chunks(reviews):
 
 class SuccessivePrompting(BaseScheme):    
     def prep_const_prompt(self):
-        if self.args.task == 'large_digit' or self.args.task == 'all_arith':
-            successive_prompt = 'To compute %s, the next question to answer is:'
-        if self.args.task == 'set_intersection': 
-            successive_prompt = 'To find the intersection of sets %s, the next question to answer is:'
-        if self.args.task == 'sorting':
-            successive_prompt = 'To find the sorting result of list %s, the next question to answer is:'
-        if self.args.task == 'keyword':
-            successive_prompt = 'To find the list of countries occurred in the paragraph %s, the next question to answer is:'
-        if self.args.task == 'yelp':
-            successive_prompt = 'To count the number of positive reviews from the review list %s, the next question to answer is:'
-        return successive_prompt
+        self.system_servent = "You follow orders strictly. Output the answer without any additional information."
+        task_name = self.args.task  
+
+        if task_name in ['large_digit', 'arithmetic']:
+            self.successive_prompt = 'To compute %s, the next question to answer is:'
+        elif task_name == 'set_intersection':
+            self.successive_prompt = 'To find the intersection of sets %s, the next question to answer is:'
+        elif task_name == 'sorting':
+            self.successive_prompt = 'To find the sorting result of list %s, the next question to answer is:'
+        elif task_name == 'keyword':
+            self.successive_prompt = 'To find the list of countries occurred in the paragraph %s, the next question to answer is:'
+        elif task_name == 'yelp':
+            self.successive_prompt = 'To count the number of positive reviews from the review list %s, the next question to answer is:'
+        else:
+            logging.warning(f"[sp] Unknown task '{task_name}' in prep_const_prompt, using generic prompt.")
+            self.successive_prompt = 'Given %s, the next question to answer is:'
 
     def prep_task_spcefics(self):
-        if self.args.task not in ['keyword', 'yelp']:
-            successive_solving_example = Task_Specific_Example.get(self.args.task).get(self.args.div)
+        task_name = self.args.task
+        div = self.args.div
+
+        if task_name not in ['keyword', 'yelp']:
+            examples_for_task = Task_Specific_Example.get(task_name, {})
+            if isinstance(examples_for_task, dict):
+                self.examples = examples_for_task.get(div)
+            else:
+                self.examples = examples_for_task
         else:
-            successive_solving_example = Task_Specific_Example.get(self.args.task)
-        
-        if self.args.task == 'large_digit' or self.args.task == 'set_intersection':
-            succ_steps = 4
-        elif self.args.task == 'all_arith' or self.args.task == 'sorting':
-            succ_steps = 3
+            self.examples = Task_Specific_Example.get(task_name)
+
+        if self.examples is None:
+            logging.warning(
+                f"[sp] No Task_Specific_Example found for task={task_name}, div={div}. "
+                f"Proceeding without few-shot example."
+            )
+            self.examples = "" 
+
+        if task_name in ['large_digit', 'set_intersection']:
+            self.succ_steps = 4
+        elif task_name in ['arithmetic', 'sorting']:
+            self.succ_steps = 3
+        elif task_name in ['keyword', 'yelp']:
+            self.succ_steps = 5
         else:
-            succ_steps = 5
-        return successive_solving_example, succ_steps
-    
+            logging.warning(f"[sp] Unknown task '{task_name}' in prep_task_spcefics, default succ_steps=3.")
+            self.succ_steps = 3
+
     def context_initializer(self, example, query):
-        instruction = ""
-        successive_prompt = self.prep_const_prompt()
-        context = example + successive_prompt % str(query)
+        successive_prompt = self.successive_prompt
+
+        if example is None:
+            example = ""
+
+        context = example + (successive_prompt % str(query))
         return context
     
     def generate_prompt(self, question, context, text=None):
-        if self.args.task == 'large_digit':
+        t = self.args.task
+        if t == 'large_digit':
             prompt = generate_large_digit_prompt(question, context)
-        if self.args.task == 'all_arith':
+        elif t == 'arithmetic':
             prompt = generate_arithmetic_prompt(question, context)
-        if self.args.task == 'set_intersection':
+        elif t == 'set_intersection':
             prompt = generate_set_intersection_prompt(question, context)
-        if self.args.task == 'sorting':
+        elif t == 'sorting':
             prompt = generate_sorting_prompt(question, context)
-        if self.args.task == 'keyword':
+        elif t == 'keyword':
             prompt = generate_keyword_counting_prompt(question, context, text)
-        if self.args.task == 'yelp':
+        elif t == 'yelp':
             prompt = generate_yelp_prompt(question, context, text)
+        else:
+            prompt = context + "\n" + question
         return prompt
     
     def solve_query(self, query):
-        # input(query)
-        # print(query)
-        successive_solving_example, succ_steps = self.prep_task_spcefics()
+        task_name = self.args.task
+
+        successive_solving_example = self.examples or ""
         context = self.context_initializer(successive_solving_example, query)
-        for i in range(succ_steps):
+
+        answer = ""
+        for i in range(self.succ_steps):
             question = self.llm_answer(context)
             context += question
+
             answer = self.llm_answer(context)
-            # print(f"Q: {question}\nA: {answer}\n")
-            if i != succ_steps-1:
-                context += f'\nFor question {question}, we already know the answer is {answer}.\nThe next question to answer is: '
+
+            if i != self.succ_steps - 1:
+                context += (
+                    f'\nFor question {question}, we already know the answer is {answer}.\n'
+                    f'The next question to answer is: '
+                )
             else:
                 context += f'There are no more questions left to ask. The answer is {answer}.'
         
-        if self.args.task == 'large_digit' or self.args.task == 'all_arith' or self.args.task == 'yelp':
-            output = self.llm_answer("extract the numerical of the answer:"+answer)
-        elif self.args.task == 'set_intersection':
-            # answer = answer.split(', ')
-            # output = [int(o) for o in answer]
-            output = self.llm_answer(f"extract the set form of the answer:{answer}")
-        elif self.args.task == 'sorting':
-            output = self.llm_answer(f"extract the list form of the answer:{answer}")
-        elif self.args.task == 'keyword':
-            output = self.llm_answer(f"{answer}. Only output the the with the square braket list of country names. format the answer in a one-line list (square brackets) without quotes. example: [Country, Country, Country, ..., Country]")
+        if task_name in ['large_digit', 'arithmetic', 'yelp']:
+            output = self.llm_answer(f"extract the numerical value of the answer: {answer}")
+        elif task_name == 'set_intersection':
+            output = self.llm_answer(f"extract the set form of the answer: {answer}")
+        elif task_name == 'sorting':
+            output = self.llm_answer(f"extract the list form of the answer: {answer}")
+        elif task_name == 'keyword':
+            output = self.llm_answer(
+                f"{answer}. Only output the list with the square bracket of country names. "
+                f"Format the answer in a one-line list (square brackets) without quotes. "
+                f"Example: [Country, Country, Country, ..., Country]"
+            )
+        else:
+            logging.warning(f"[sp] No specific extraction logic for task '{task_name}'. Returning raw final answer.")
+            output = answer
         
-        # logging.info(f'>>>>>>>>>>>> final result: {output} <<<<<<<<<<<<<')
-        # input()
         return output

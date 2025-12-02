@@ -51,7 +51,7 @@ class Selfdiscover(BaseScheme):
     def prep_const_prompt(self):
         if self.args.task == 'large_digit':
             prompt = 'We are solving an addition problem of large-digit numbers: '
-        if self.args.task == 'all_arith':
+        if self.args.task == 'arithmetic':
             prompt = 'We are solving arithmetic problems: '
         if self.args.task == 'set_intersection': 
             prompt = 'We are find the intersection of sets: '
@@ -107,7 +107,7 @@ class Selfdiscover(BaseScheme):
         adapted_modules = self.adapt_reasoning_modules(selected_modules, task_example)
         reasoning_structure = self.implement_reasoning_structure(adapted_modules, task_example)
         answer = self.execute_reasoning_structure(reasoning_structure, task_example)
-        if self.args.task == 'large_digit' or self.args.task == 'all_arith' or self.args.task == 'yelp':
+        if self.args.task == 'large_digit' or self.args.task == 'arithmetic' or self.args.task == 'yelp':
             output = self.llm_answer("extract the numerical of the answer from: "+answer+" Only output a number.")
         elif self.args.task == 'set_intersection':
             # answer = answer.split(', ')

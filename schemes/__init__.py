@@ -10,7 +10,7 @@ from schemes.aot import AlgorithmofThought
 from schemes.top import TreeOfProblems
 from schemes.got import GraphofThought
 
-from schemes.knot import kNetworkofThought
+# from schemes.xnot import kNetworkofThought
 from schemes.rknot import rkNetworkofThought
 from schemes.dknot import dkNetworkofThought
 from schemes.tot import TreeofThought
@@ -29,7 +29,7 @@ SCHEME_DICT = {
     'tot': TreeofThought, 
     'top': TreeOfProblems,
     'got': GraphofThought, ## run in Graph-of-thought for yelp
-    'knot': kNetworkofThought, 
+    # 'xnot': kNetworkofThought, 
     'rknot': rkNetworkofThought,
     'dknot': dkNetworkofThought,
 }
