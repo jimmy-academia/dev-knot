@@ -35,15 +35,15 @@ class TreeofThought(BaseScheme):
         div = parts[1] if len(parts) > 1 else None
         return task_name, div
 
-    def _fallback_cot(self, query):
+    def _fallback_cot(self, query, ground_truth=None):
         if self._cot_helper is None:
             self._cot_helper = ChainofThought(self.args, self.task_loader)
             self._cot_helper.prep_const_prompt()
             self._cot_helper.prep_task_spcefics()
             logger.info("[tot] Tree-of-Thought not available or task unsupported; fallback to Chain-of-Thought.")
-        return self._cot_helper.solve_query(query)
+        return self._cot_helper.solve_query(query, ground_truth)
 
-    def solve_query(self, query):
+    def solve_query(self, query, ground_truth=None):
         start_time = time.time()
         task_name, div = self._parse_task_name()
 
@@ -58,11 +58,11 @@ class TreeofThought(BaseScheme):
 
                 if result is None:
                     logger.warning(f"[tot] custom ToT returned None for task={task_name}, fallback to CoT.")
-                    result = self._fallback_cot(query)
+                    result = self._fallback_cot(query, ground_truth)
 
             except Exception as e:
                 logger.warning(f"[tot] custom ToT execution failed ({e}), fallback to CoT.")
-                result = self._fallback_cot(query)
+                result = self._fallback_cot(query, ground_truth)
 
         elif task_name in ("arithmetic", "large_digit"):
             try:
@@ -107,17 +107,19 @@ class TreeofThought(BaseScheme):
             "You are solving a sorting problem.\n"
             "You must sort the given list of integers in ascending order.\n"
             "Question: " + str(query) + "\n\n"
+            "Strategy Hint: Use Bucket Sort (partition values into 0-4 and 5-9) to ensure no numbers are missed.\n"
             "Generate 3 different candidate sorted results.\n"
             "Use exactly this format and nothing else:\n"
-            "CANDIDATE 1: {a_1, a_2, ..., a_n}\n"
-            "CANDIDATE 2: {b_1, b_2, ..., b_n}\n"
-            "CANDIDATE 3: {c_1, c_2, ..., c_n}\n"
+            "CANDIDATE 1: [a_1, a_2, ..., a_n]\n"
+            "CANDIDATE 2: [b_1, b_2, ..., b_n]\n"
+            "CANDIDATE 3: [c_1, c_2, ..., c_n]\n"
             "No explanations."
         )
         raw = self.llm_answer(gen_prompt)
 
         candidates = []
-        for m in re.finditer(r"\{([^}]*)\}", raw):
+        # Support both [] and {} just in case, but prefer []
+        for m in re.finditer(r"[\[\{](.*?)[\]\}]", raw):
             seq_str = m.group(1)
             nums = []
             for t in seq_str.split(","):
@@ -164,14 +166,14 @@ class TreeofThought(BaseScheme):
             logger.warning("[tot] _run_sorting_tot: all candidates scored 0, fallback to CoT.")
             return self._fallback_cot(query)
 
-        result_str = "{" + ", ".join(str(x) for x in best_seq) + "}"
+        result_str = "[" + ", ".join(str(x) for x in best_seq) + "]"
         return result_str
     
         # ---------- ToT for keyword (country extraction) ----------
     def _run_keyword_tot(self, query: str):
         gen_prompt = (
             "You are extracting country names (no continents) from the following paragraph.\n"
-            "Country names should appear in the order they appear in the text, duplicates allowed.\n"
+            "Country names should appear in the order they appear in the text, duplicates explicitly allowed and required.\n"
             "Paragraph:\n"
             f"{query}\n\n"
             "Generate 3 different candidate lists of countries.\n"
@@ -179,6 +181,7 @@ class TreeofThought(BaseScheme):
             "CANDIDATE 1: [Country1, Country2, ...]\n"
             "CANDIDATE 2: [Country1, Country2, ...]\n"
             "CANDIDATE 3: [Country1, Country2, ...]\n"
+            "Format rule: Absolutely NO quotes around country names. Example: [Japan, France] NOT ['Japan', 'France'].\n"
             "No explanations."
         )
         raw = self.llm_answer(gen_prompt)
@@ -234,22 +237,27 @@ class TreeofThought(BaseScheme):
         return result_str
     
         # ---------- ToT for set_intersection ----------
-    def _run_set_intersection_tot(self, query: str):
+    def _run_set_intersection_tot(self, query):
+        if isinstance(query, tuple):
+            formatted_query = f"Input:\nSet1: {query[0]}\nSet2: {query[1]}"
+        else:
+            formatted_query = str(query)
+
         gen_prompt = (
             "You are solving a set intersection problem.\n"
             "The question describes two sets of integers; you must find their intersection and output it as a sorted set.\n"
-            "Question: " + str(query) + "\n\n"
+            "Question: " + formatted_query + "\n\n"
             "Generate 3 different candidate intersection sets.\n"
             "Use exactly this format and nothing else:\n"
-            "CANDIDATE 1: {a_1, a_2, ..., a_k}\n"
-            "CANDIDATE 2: {b_1, b_2, ..., b_k}\n"
-            "CANDIDATE 3: {c_1, c_2, ..., c_k}\n"
+            "CANDIDATE 1: [a_1, a_2, ..., a_k]\n"
+            "CANDIDATE 2: [b_1, b_2, ..., b_k]\n"
+            "CANDIDATE 3: [c_1, c_2, ..., c_k]\n"
             "No explanations."
         )
         raw = self.llm_answer(gen_prompt)
 
         candidates = []
-        for m in re.finditer(r"\{([^}]*)\}", raw):
+        for m in re.finditer(r"\[([^\]]*)\]", raw):
             seq_str = m.group(1)
             nums = []
             for t in seq_str.split(","):
@@ -272,7 +280,7 @@ class TreeofThought(BaseScheme):
         for seq in candidates:
             eval_prompt = (
                 "We are checking a candidate answer for a set intersection task.\n"
-                f"Original question: {query}\n"
+                f"Original question: {formatted_query}\n"
                 f"Candidate intersection (as a sorted list): {seq}\n\n"
                 "Evaluate this candidate based on:\n"
                 "1) Every number in the candidate must appear in BOTH original sets.\n"
@@ -297,7 +305,7 @@ class TreeofThought(BaseScheme):
             logger.warning("[tot] _run_set_intersection_tot: all candidates scored 0, fallback to CoT.")
             return self._fallback_cot(query)
 
-        result_str = "{" + ", ".join(str(x) for x in best_seq) + "}"
+        result_str = "[" + ", ".join(str(x) for x in best_seq) + "]"
         return result_str
 
 
@@ -320,18 +328,42 @@ class TreeofThought(BaseScheme):
             "CANDIDATE 3:\n"
             "[your step-by-step calculation]\n"
             "Final answer: Z\n\n"
-            "No extra explanations."
+            "Rule: X, Y, Z must be numbers only. No text like 'The answer is'."
         )
         raw = self.llm_answer(gen_prompt)
         
         # Step 2: Parse candidates
+        # Step 2: Parse candidates
         candidates = []
-        for match in re.finditer(r"Final answer:\s*([+-]?\d+\.?\d*)", raw, re.IGNORECASE):
+        # Relaxed regex to catch **42**, 42.0, etc.
+        # Looks for "Final answer:" followed by optional non-digits, then capture number
+        pattern = r"Final answer:.*?([+-]?\d+\.?\d*)"
+        
+        matches = list(re.finditer(pattern, raw, re.IGNORECASE | re.DOTALL))
+        for match in matches:
             try:
-                num = float(match.group(1))
+                # Remove any markdown formatting like * or `
+                clean_num = match.group(1).replace('*', '').replace('`', '')
+                if not clean_num: continue
+                
+                num = float(clean_num)
                 candidates.append(num)
             except ValueError:
                 pass
+                
+        # Fallback: if no explicit "Final answer" found, look for "CANDIDATE X" blocks and take the last number
+        if not candidates:
+             candidate_blocks = re.split(r"CANDIDATE \d+:", raw)
+             for block in candidate_blocks:
+                 if not block.strip(): continue
+                 # Find all numbers
+                 nums = re.findall(r"([+-]?\d+\.?\d*)", block)
+                 if nums:
+                     try:
+                         # Take the last number in the block as the candidate
+                         last_num = nums[-1]
+                         candidates.append(float(last_num))
+                     except: pass
         
         if not candidates:
             logger.warning("[tot] _run_arithmetic_tot: no candidates parsed, fallback to CoT.")
@@ -371,14 +403,18 @@ class TreeofThought(BaseScheme):
             return self._fallback_cot(query)
         
         # Format output
-        result_str = str(best_answer)
-        # For arithmetic, keep 2 decimal places if it's a float
-        if '.' in result_str and result_str != str(int(float(result_str))):
+        # If it is an integer (26.0), return "26" to match GT "26" for string equality in base.py
+        if best_answer.is_integer():
+            result_str = str(int(best_answer))
+        else:
+            # If it's a real float (26.5), keep reasonable precision
             result_str = f"{best_answer:.2f}"
+            if result_str.endswith(".00"): result_str = result_str[:-3]
         
+        # Debug Log
+        logger.info(f"[tot] Arithmetic: {query} -> Candidates: {candidates} -> Best: {best_answer} -> Out: {result_str}")
         return result_str
 
-# ---------- ToT for large_digit ----------
     def _run_large_digit_tot(self, query: str):
         """Tree of Thoughts for large digit addition"""
         # Step 1: Generate 3 candidate solutions

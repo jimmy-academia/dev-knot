@@ -37,7 +37,7 @@ class GraphofThought(BaseScheme):
             'large_digit': 'large_digit/large_digit.py',   
         }
     
-    def solve_query(self, query):
+    def solve_query(self, query, ground_truth=None):
         if not GOT_AVAILABLE:
             raise RuntimeError("graph_of_thoughts not available")
         
@@ -60,12 +60,31 @@ class GraphofThought(BaseScheme):
             if not os.path.exists(config_path):
                 raise FileNotFoundError(f"Config not found: {config_path}")
             
+            # Load and modify config to use the correct model
+            import json
+            import tempfile
+            
+            with open(config_path, 'r') as f:
+                config_data = json.load(f)
+            
+            if "chatgpt" not in config_data:
+                 config_data["chatgpt"] = {"model_id": "gpt-3.5-turbo"} # default fallback
+            
+            config_data["chatgpt"]["model_id"] = self.args.worker_llm
+            config_data["chatgpt"]["max_tokens"] = 8192 
+
+            # Create temp config file
+            temp_config = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json')
+            json.dump(config_data, temp_config)
+            temp_config.flush()
+            temp_config.close()
+            
             lm = language_models.ChatGPT(
-                config_path,
+                temp_config.name,
                 model_name="chatgpt",
                 cache=True
             )
-            
+ 
             lm = self._patch_lm_timing(lm)
             initial_state = {
                 "original": query,
@@ -171,14 +190,22 @@ class GraphofThought(BaseScheme):
             if isinstance(result, str):
                 try:
                     import json
-                    country_dict = json.loads(result)
-                    # 将 {"Country": freq} 转换为 [Country, Country, ...]
+                    parsed_result = json.loads(result)
+                    
                     countries = []
-                    for country, freq in country_dict.items():
-                        countries.extend([country] * freq)
+                    if isinstance(parsed_result, dict):
+                        # Handle old dict format {"Country": freq}
+                        for country, freq in parsed_result.items():
+                            countries.extend([country] * freq)
+                    elif isinstance(parsed_result, list):
+                         # Handle new list format ["Country1", "Country2"]
+                        countries = parsed_result
+                    else:
+                        countries = []
+
                     logging.info(f"[post_process] Converted to list: {countries}")
                     
-                    result_str = str(countries)
+                    result_str = f"[{', '.join(str(c) for c in countries)}]"
                     logging.info(f"[post_process] Final output: {result_str}")
                     return result_str
                 except Exception as e:
@@ -190,7 +217,11 @@ class GraphofThought(BaseScheme):
             if isinstance(result, (int, float)):
                 result_str = str(result)
                 if task_name == 'arithmetic' and isinstance(result, float):
-                    result_str = f"{result:.2f}"
+                    if result.is_integer():
+                        result_str = str(int(result))
+                    else:
+                        result_str = f"{result:.2f}"
+                        if result_str.endswith(".00"): result_str = result_str[:-3]
                 logging.info(f"[post_process] Converted to string: {result_str}")
                 return result_str
             return str(result)

@@ -117,7 +117,7 @@ class PlanAndSolve(BaseScheme):
             logging.warning(f"[ps] No specific extraction logic for task '{task_name}'. Returning raw output.")
             return output
 
-    def solve_query(self, query):
+    def solve_query(self, query, ground_truth=None, **kwargs):
         self.prep_task_spcefics()
 
         plan_steps = self.generate_plan(query)

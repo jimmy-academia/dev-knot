@@ -4,7 +4,9 @@ from graph_of_thoughts import operations, prompter, parser
 class SortingPrompter(prompter.Prompter):
     """Sorting prompter"""
     
-    sort_prompt = """<Instruction> Sort the following list of numbers in ascending order. Output only the sorted list of numbers, no additional text. </Instruction>
+    sort_prompt = """<Instruction> Sort the following list of numbers in ascending order.
+Strategy: Use Bucket Sort. Partition the list into values 0-4 and 5-9. Sort each bucket, then merge.
+Output only the final sorted list of numbers (Python list format), no additional text. </Instruction>
 
 <Examples>
 Input: [5, 1, 0, 1, 2, 0, 4, 8, 1, 9, 5, 1, 3, 3, 9, 7]
@@ -47,11 +49,16 @@ class SortingParser(parser.Parser):
         
         new_states = []
         for text in texts:
+            import re
             try:
-                result = ast.literal_eval(text.strip())
-                if isinstance(result, list):
-                    result = sorted(result)
+                # Robust extraction
+                match = re.search(r"\[.*?\]", text.strip(), re.DOTALL)
+                if match:
+                    result = ast.literal_eval(match.group(0))
                 else:
+                    result = ast.literal_eval(text.strip())
+                
+                if not isinstance(result, list):
                     result = []
             except:
                 result = []
@@ -68,8 +75,14 @@ class SortingParser(parser.Parser):
         
         new_states = []
         for text in texts:
+            import re
             try:
-                result = ast.literal_eval(text.strip())
+                match = re.search(r"\[.*?\]", text.strip(), re.DOTALL)
+                if match:
+                    result = ast.literal_eval(match.group(0))
+                else:
+                    result = ast.literal_eval(text.strip())
+
                 if not isinstance(result, list):
                     result = []
             except:

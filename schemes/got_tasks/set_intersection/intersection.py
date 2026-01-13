@@ -18,6 +18,10 @@ Output:"""
     
     def aggregation_prompt(self, state_dicts: List[Dict], **kwargs) -> str:
         original = state_dicts[0]['original']
+        
+        if isinstance(original, tuple):
+            return self.intersection_prompt.format(set1=str(original[0]), set2=str(original[1]))
+            
         parts = original.split(',', 1)
         if len(parts) == 2:
             return self.intersection_prompt.format(set1=parts[0].strip(), set2=parts[1].strip())
@@ -26,6 +30,10 @@ Output:"""
     def generate_prompt(self, num_branches: int, **kwargs) -> str:
         state = kwargs.get('state', kwargs)
         original = state['original']
+        
+        if isinstance(original, tuple):
+             return self.intersection_prompt.format(set1=str(original[0]), set2=str(original[1]))
+             
         parts = original.split(',', 1)
         if len(parts) == 2:
             return self.intersection_prompt.format(set1=parts[0].strip(), set2=parts[1].strip())

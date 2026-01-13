@@ -19,11 +19,12 @@ def set_arguments():
     # gpt-3.5-turbo, gpt-4o
     parser.add_argument('--seed', type=int, default=0, help='random seed')
     parser.add_argument('--verbose', type=int, default=1, help='verbose')
-    parser.add_argument('--planner_llm', type=str, default="gpt-4o-2024-08-06") 
-    parser.add_argument('--worker_llm', type=str, default="gpt-3.5-turbo-0125")
+    parser.add_argument('--planner_llm', type=str, default="gpt-5-nano") 
+    parser.add_argument('--worker_llm', type=str, default="gpt-5-nano")
 
     # logging decisions
     parser.add_argument('--ckpt', type=str, default='ckpt')
+    parser.add_argument('--threads', type=int, default=1, help='number of threads for parallel processing')
 
     # Task, prompt scheme
     parser.add_argument('--scheme', type=str, default='xnot') 
@@ -38,13 +39,13 @@ def set_arguments():
 def main():
     args = set_arguments()
 
-    if args.task == 'healthcare':
-        args.planner_llm = "gpt-4.1"
-        # args.worker_llm = "chatgpt-4o-latest"
-        # args.worker_llm = "gpt-4o-mini"
-    if args.scheme == 'rknot':
-        args.planner_llm = "o1-mini"
-        args.worker_llm = "chatgpt-4o-latest"
+    # if args.task == 'healthcare':
+    #     args.planner_llm = "gpt-4.1"
+    #     # args.worker_llm = "chatgpt-4o-latest"
+    #     # args.worker_llm = "gpt-4o-mini"
+    # if args.scheme == 'rknot':
+    #     args.planner_llm = "o1-mini"
+    #     args.worker_llm = "chatgpt-4o-latest"
 
     args.overwrite=True
     set_seeds(args.seed)

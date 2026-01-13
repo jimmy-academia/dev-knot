@@ -132,14 +132,22 @@ class ChatGPT(AbstractLanguageModel):
         :return: The OpenAI model's response.
         :rtype: ChatCompletion
         """
-        response = self.client.chat.completions.create(
-            model=self.model_id,
-            messages=messages,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            n=num_responses,
-            stop=self.stop,
-        )
+        # Prepare arguments dynamically to support newer models (o1/gpt-5) requiring max_completion_tokens
+        kwargs = {
+            "model": self.model_id,
+            "messages": messages,
+            "temperature": self.temperature,
+            "n": num_responses,
+            "stop": self.stop,
+        }
+        
+        # Check for reasoning models or gpt-5 that reject max_tokens
+        if any(x in self.model_id for x in ["o1", "o3", "gpt-5"]):
+            kwargs["max_completion_tokens"] = self.max_tokens
+        else:
+            kwargs["max_tokens"] = self.max_tokens
+
+        response = self.client.chat.completions.create(**kwargs)
 
         self.prompt_tokens += response.usage.prompt_tokens
         self.completion_tokens += response.usage.completion_tokens

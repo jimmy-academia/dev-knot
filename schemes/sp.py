@@ -547,7 +547,7 @@ class SuccessivePrompting(BaseScheme):
             prompt = context + "\n" + question
         return prompt
     
-    def solve_query(self, query):
+    def solve_query(self, query, ground_truth=None, **kwargs):
         task_name = self.args.task
 
         successive_solving_example = self.examples or ""

@@ -16,7 +16,7 @@ def get_task_loader(args):
     """
 
     # Handle tasks that use basic CSV loading pattern
-    standard_csv_tasks = ['yelp', 'keyword', 'addition', 'arithmetic', 'sorting', 'large_digit', "set_intersection"]
+    standard_csv_tasks = ['yelp', 'keyword', 'addition', 'arithmetic', 'sorting', 'large_digit']
     _task = args.task
     _task = 'addition' if 'addition' in _task else _task
     if _task in standard_csv_tasks:
@@ -28,7 +28,7 @@ def get_task_loader(args):
     if args.task == 'set_intersection':
         file = f'data/{args.task}/{args.div}.csv' if args.div else f'data/{args.task}.csv'
         rows = csv.reader(open(file))
-        return [(row[1], row[2], row[3]) for row in rows]
+        return [((row[1], row[2]), row[3]) for row in rows]
          
     if args.task == 'healthcare':
         workflows = loadj("data/healthcare/workflows.json")
