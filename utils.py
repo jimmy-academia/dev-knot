@@ -64,3 +64,59 @@ def worst_meanstd(_list):
         return _list[0], _list[0], 0.0
     return max(_list), statistics.mean(_list), statistics.stdev(_list)
 
+
+def extract_json_content(text):
+    """
+    Robustly extract the first valid JSON list or object from a string.
+    Handles nested structures by counting brackets.
+    """
+    text = text.strip()
+    
+    # helper to find the balancing bracket
+    def find_end(s, start_idx, open_char, close_char):
+        count = 0
+        for i in range(start_idx, len(s)):
+            if s[i] == open_char:
+                count += 1
+            elif s[i] == close_char:
+                count -= 1
+                if count == 0:
+                    return i + 1
+        return -1
+
+    candidates = []
+    
+    # Find all potential starts
+    for i, char in enumerate(text):
+        if char == '[':
+            end = find_end(text, i, '[', ']')
+            if end != -1:
+                candidates.append(text[i:end])
+        elif char == '{':
+            end = find_end(text, i, '{', '}')
+            if end != -1:
+                candidates.append(text[i:end])
+                
+    # Return the first candidate that parses as JSON
+    import json
+    import ast
+    
+    for cand in candidates:
+        try:
+            return json.loads(cand)
+        except:
+            try:
+                return ast.literal_eval(cand)
+            except:
+                continue
+                
+    # Fallback: Regex for simple list
+    import re
+    match = re.search(r'\[.*?\]', text, re.DOTALL)
+    if match:
+        try: return json.loads(match.group(0))
+        except: 
+            try: return ast.literal_eval(match.group(0))
+            except: pass
+            
+    return text  # Return original if everything fails

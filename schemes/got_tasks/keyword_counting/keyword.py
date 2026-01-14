@@ -5,21 +5,19 @@ import json
 class KeywordPrompter(prompter.Prompter):
     """Keyword counting prompter"""
     
-    count_prompt = """<Instruction> Count the frequency of how many times each country is explicitly named in the input text. Output only the frequency of each country that appears at least once in the following json format:
-{{
-    "country1": frequency1,
-    "country2": frequency2
-}}
+    count_prompt = """<Instruction> Extract all country names from the input text in the exact order they appear. Include duplicates. Output only the list of countries in the following json format (no quotes around list items in the description, but standard JSON list output):
+["Country1", "Country2", "Country1", ...]
 </Instruction>
 
 <Examples>
 Input:
-Alexandra boarded the first flight from Canada. Her first stop was Mexico.
+Alexandra boarded the first flight from Canada. Her first stop was Mexico. Then she went back to Canada.
 Output: 
-{{
-    "Canada": 1,
-    "Mexico": 1
-}}
+[
+    "Canada",
+    "Mexico",
+    "Canada"
+]
 </Examples>
 
 Input:
@@ -54,10 +52,10 @@ class KeywordParser(parser.Parser):
         for text in texts:
             try:
                 result = json.loads(text.strip())
-                if not isinstance(result, dict):
-                    result = {}
+                if not isinstance(result, (dict, list)):
+                    result = []
             except:
-                result = {}
+                result = []
             
             new_state = states[0].copy()
             new_state["current"] = json.dumps(result)
@@ -71,10 +69,10 @@ class KeywordParser(parser.Parser):
         for text in texts:
             try:
                 result = json.loads(text.strip())
-                if not isinstance(result, dict):
-                    result = {}
+                if not isinstance(result, (dict, list)):
+                    result = []
             except:
-                result = {}
+                result = []
             
             new_state = state.copy()
             new_state["current"] = json.dumps(result)
@@ -87,10 +85,10 @@ class KeywordParser(parser.Parser):
         text = texts[0] if texts else "{}"
         try:
             result = json.loads(text.strip())
-            if not isinstance(result, dict):
-                result = {}
+            if not isinstance(result, (dict, list)):
+                result = []
         except:
-            result = {}
+            result = []
         
         new_state = state.copy()
         new_state["current"] = json.dumps(result)

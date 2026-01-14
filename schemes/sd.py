@@ -101,7 +101,7 @@ class Selfdiscover(BaseScheme):
         solution = self.llm_answer(prompt)
         return solution
     
-    def solve_query(self, query):
+    def solve_query(self, query, ground_truth=None, **kwargs):
         task_example = self.prep_const_prompt() + query
         selected_modules = self.select_reasoning_modules(task_example, reasoning_modules)
         adapted_modules = self.adapt_reasoning_modules(selected_modules, task_example)

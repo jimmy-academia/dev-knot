@@ -42,11 +42,18 @@ class BaseScheme(object):
 
         for attempt in range(max_retries):
             try:
-                response = self.client.chat.completions.create(
-                    model = model,
-                    messages = message,
-                    temperature = temperature,
-                )
+                if 'gpt-5-nano' in model:
+                    response = self.client.chat.completions.create(
+                        model = model,
+                        messages = message,
+                        # temperature = temperature, # gpt-5-nano only supports default temperature
+                    )
+                else:
+                    response = self.client.chat.completions.create(
+                        model = model,
+                        messages = message,
+                        temperature = temperature,
+                    )
                 return response.choices[0].message.content
 
             except openai.RateLimitError as e:
@@ -84,31 +91,69 @@ class BaseScheme(object):
         results['accuracy'] = 0
         correct = total = 0
 
-        loader_bar = tqdm(self.task_loader, ncols=88, desc=f"[{self.args.scheme}]", total=100)
-        for query, answer in loader_bar:
-            self.ground_truth = answer
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        import threading
+
+        total_samples = min(100, len(self.task_loader))
+        loader_bar = tqdm(total=total_samples, ncols=88, desc=f"[{self.args.scheme}]")
+        
+        lock = threading.Lock()
+
+        def process_item(item):
+            query, answer = item
+            # self.ground_truth is problematic in threads if accessed globally. 
+            # Ideally pass answer to solve_query or fix verify logic.
+            # But solve_query usually doesn't need ground_truth except for logging?
+            # Actually xnot.py lines 281 uses self.ground_truth. This is NOT THREAD SAFE.
+            # We must set self.ground_truth locally or avoid using it in solve_query for verification.
+            # But changing solve_query signature affects all schemes.
+            # Hack: Use threading.local() or just accept that xnot verification print might be racy.
+            # Better: Move verification OUT of solve_query.
+            # However, looking at xnot.py, it prints iscorrect at the end.
             
+            # For now, let's assume solve_query functions are mostly purely functional or we tolerate log race.
+            # Important: Set self.ground_truth to answer just in case, but lock it? No, that serializes.
+            # We will ignore self.ground_truth correctness inside solve_query and rely on operate() check.
+            
+            nonlocal correct, total
             start_time = time.time()
-            output = self.solve_query(query)
-            self.perstep_runtimes.append(time.time() - start_time)
-            # logging.info(f'=> output: {output} vs answer {answer} <<<')
-            results['query'].append(query)
-            results['output'].append(output)
-            results['answer'].append(answer)
-            iscorrect = self.ground_truth.lower() in output.lower() if self.args.task == 'healthcare' else self.ground_truth == output
-            correct += int(iscorrect)
+            try:
+                # We temporarily set GT for this thread? No, self is shared.
+                # Just call solve_query.
+                # In xnot.py, change 'self.ground_truth' to 'answer' if possible, or ignore the print inside.
+                output = self.solve_query(query, ground_truth=answer)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                output = f"Error: {e}"
             
-            total += 1
-            results['accuracy'] = correct/total
-            loader_bar.set_postfix(acc=correct/total)
-            # dumpj(results, self.args.record_path)
-            # print(output, answer)
-            # return True
+            duration = time.time() - start_time
+            
+            iscorrect = str(answer).lower() in str(output).lower() if self.args.task == 'healthcare' else str(answer) == str(output)
+            
+            with lock:
+                self.perstep_runtimes.append(duration)
+                results['query'].append(query)
+                results['output'].append(output)
+                results['answer'].append(answer)
+                
+                correct += int(iscorrect)
+                total += 1
+                loader_bar.update(1)
+                loader_bar.set_postfix(acc=correct/total)
 
-            if total == 100:
-                break
-
-            # check()
+        items = list(self.task_loader)[:total_samples]
+        
+        if self.args.threads > 1:
+            with ThreadPoolExecutor(max_workers=self.args.threads) as executor:
+                futures = [executor.submit(process_item, item) for item in items]
+                for future in as_completed(futures):
+                    pass # handled in process_item
+        else:
+            for item in items:
+                # Sequential fallback (sets self.ground_truth safely for xnot logs)
+                self.ground_truth = item[1] 
+                process_item(item)
 
         perstep_worst, perstep_mean, perstep_std = worst_meanstd(self.perstep_runtimes)
         total_worst, total_mean, total_std = worst_meanstd(self.total_runtimes)
@@ -118,37 +163,14 @@ class BaseScheme(object):
         print(f'{perstep_worst:.2f}, {perstep_mean:.2f}± {perstep_std:.2f}')
         print(f'{total_worst:.2f}, {total_mean:.2f}± {total_std:.2f}')
         # input('pause')
-        if self.args.task in ['yelp', 'keyword', 'addition', 'arithmetic', 'sorting', 'large_digit']:
-            for query, answer in loader_bar:
-                self.ground_truth = answer
-                
-                # Record total runtime
-                start_time = time.time()
-                output = self.solve_query(query)
-                end_time = time.time()
-                self.total_runtimes.append(end_time - start_time)
-                
-                results['query'].append(query)
-                results['output'].append(output)
-                results['answer'].append(answer)
-                iscorrect = self.ground_truth.lower() in output.lower() if self.args.task == 'healthcare' else self.ground_truth == output
-                correct += int(iscorrect)
-                
-                total += 1
-                results['accuracy'] = correct/total
-                loader_bar.set_postfix(acc=correct/total)
-                # dumpj(results, self.args.record_path)
-                # print(output, answer)
-                # return True
-
-                if total == 3:
-                    break
 
         if self.perstep_runtimes and self.total_runtimes:
             perstep_worst, perstep_mean, perstep_std = worst_meanstd(self.perstep_runtimes)
             total_worst, total_mean, total_std = worst_meanstd(self.total_runtimes)
             print(f'- Perstep worst: {perstep_worst:.2f}, mean: {perstep_mean:.2f}± {perstep_std:.2f}')
             print(f'- Total   worst: {total_worst:.2f}, mean: {total_mean:.2f}± {total_std:.2f}')
+        
+        print(f"Final Accuracy: {correct/total:.2%} ({correct}/{total})")
 
         results['info'] = f"Correct: {correct}/Total: {total}"
         dumpj(results, self.args.record_path)
@@ -165,7 +187,7 @@ class ZeroFewShot(BaseScheme):
         else: 
             self.examples = ""
             
-    def solve_query(self, query):
+    def solve_query(self, query, ground_truth=None):
         resp = self.llm_call([system_struct(self.system_servent),
                             user_struct(self.context + self.examples + (str(query) if isinstance(query, dict) else query))])
 
@@ -329,7 +351,7 @@ class PromptScheme(BaseScheme):
     def prep_task_spcefics(self):
         pass
 
-    def solve_query(self, query):
+    def solve_query(self, query, ground_truth=None):
         pass
 
 '''

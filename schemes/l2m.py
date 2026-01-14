@@ -234,7 +234,7 @@ class Least2Most(BaseScheme):
              raise ValueError(f"Prompt generation not defined for task: {task_name}")
         return prompt
 
-    def solve_query(self, query):
+    def solve_query(self, query, ground_truth=None, **kwargs):
         """Solves the query using the Least-to-Most approach with subquestions."""
         # Extract base task name if division is present (e.g., "keyword:2" -> "keyword")
         task_name = self.args.task.split(':')[0]
